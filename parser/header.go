@@ -1,9 +1,5 @@
 package parser
 
-import (
-	"github.com/pyroscope-io/jfr-parser/reader"
-)
-
 const headerSize = 60
 
 type Header struct {
@@ -17,7 +13,7 @@ type Header struct {
 	Features           int32
 }
 
-func (h *Header) Parse(rd reader.Reader) (err error) {
+func (h *Header) Parse(rd Reader) (err error) {
 	h.ChunkSize, _ = rd.Long()
 	h.ConstantPoolOffset, _ = rd.Long()
 	h.MetadataOffset, _ = rd.Long()

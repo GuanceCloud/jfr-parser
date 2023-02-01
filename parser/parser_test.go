@@ -4,13 +4,49 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 )
 
+func testParseFile(name string) ([]Chunk, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open jfr file: %w", err)
+	}
+	defer f.Close()
+	return Parse(f)
+}
+
+func TestParseUncompressed(t *testing.T) {
+	chunks, err := testParseFile("./testdata/ddtrace.jfr")
+	if err != nil {
+		t.Fatalf("Unable to parse jfr file: %s", err)
+	}
+	fmt.Println("chunks length: ", len(chunks))
+}
+
+func TestParseZip(t *testing.T) {
+	chunks, err := testParseFile("./testdata/ddtrace.jfr.zip")
+	if err != nil {
+		t.Fatalf("Unable to parse jfr file: %s", err)
+	}
+	fmt.Println("chunks length: ", len(chunks))
+}
+
+func TestParseLZ4(t *testing.T) {
+
+	chunks, err := testParseFile("./testdata/ddtrace.jfr.lz4")
+	if err != nil {
+		t.Fatalf("Unable to parse jfr file: %s", err)
+	}
+
+	fmt.Println("chunks length:", len(chunks))
+}
+
 func TestParse(t *testing.T) {
-	jfr, err := readGzipFile("./testdata/example.jfr.gz")
+	jfr, err := os.Open("./testdata/example.jfr.gz")
 	if err != nil {
 		t.Fatalf("Unable to read JFR file: %s", err)
 	}
@@ -18,7 +54,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to read example_parsd.json")
 	}
-	chunks, err := Parse(bytes.NewReader(jfr))
+	chunks, err := Parse(jfr)
 	if err != nil {
 		t.Fatalf("Failed to parse JFR: %s", err)
 		return
@@ -31,12 +67,12 @@ func TestParse(t *testing.T) {
 }
 
 func BenchmarkParse(b *testing.B) {
-	jfr, err := readGzipFile("./testdata/example.jfr.gz")
+	jfr, err := os.Open("./testdata/example.jfr.gz")
 	if err != nil {
 		b.Fatalf("Unable to read JFR file: %s", err)
 	}
 	for i := 0; i < b.N; i++ {
-		_, err := Parse(bytes.NewReader(jfr))
+		_, err := Parse(jfr)
 		if err != nil {
 			b.Fatalf("Unable to parse JFR file: %s", err)
 		}

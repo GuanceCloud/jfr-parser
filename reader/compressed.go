@@ -5,11 +5,17 @@ import (
 	"io"
 )
 
+type VarReader interface {
+	VarShort() (int16, error)
+	VarInt() (int32, error)
+	VarLong() (int64, error)
+}
+
 type compressed struct {
 	io.ByteReader
 }
 
-func newCompressed(r io.ByteReader) VarReader {
+func NewCompressed(r io.ByteReader) VarReader {
 	return compressed{ByteReader: r}
 }
 

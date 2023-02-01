@@ -6,7 +6,12 @@ import (
 )
 
 func Parse(r io.Reader) ([]Chunk, error) {
-	return ParseWithOptions(r, &ChunkParseOptions{})
+	rc, err := Uncompress(r)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decompress input stream: %w", err)
+	}
+	defer rc.Close()
+	return ParseWithOptions(rc, &ChunkParseOptions{})
 }
 
 func ParseWithOptions(r io.Reader, options *ChunkParseOptions) ([]Chunk, error) {

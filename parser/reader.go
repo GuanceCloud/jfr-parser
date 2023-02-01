@@ -1,16 +1,12 @@
-package reader
+package parser
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	reader2 "github.com/pyroscope-io/jfr-parser/reader"
 	"io"
 )
-
-type VarReader interface {
-	VarShort() (int16, error)
-	VarInt() (int32, error)
-	VarLong() (int64, error)
-}
 
 type Reader interface {
 	Boolean() (bool, error)
@@ -21,9 +17,9 @@ type Reader interface {
 	Long() (int64, error)
 	Float() (float32, error)
 	Double() (float64, error)
-	String() (string, error)
+	String(pool *CPool) (string, error)
 
-	VarReader
+	reader2.VarReader
 
 	// TODO: Support arrays
 }
@@ -35,15 +31,15 @@ type InputReader interface {
 
 type reader struct {
 	InputReader
-	varR VarReader
+	varR reader2.VarReader
 }
 
 func NewReader(r InputReader, compressed bool) Reader {
-	var varR VarReader
+	var varR reader2.VarReader
 	if compressed {
-		varR = newCompressed(r)
+		varR = reader2.NewCompressed(r)
 	} else {
-		varR = newUncompressed(r)
+		varR = reader2.NewUncompressed(r)
 	}
 	return reader{
 		InputReader: r,
@@ -67,7 +63,7 @@ func (r reader) Byte() (int8, error) {
 }
 
 func (r reader) Short() (int16, error) {
-	return Short(r)
+	return reader2.Short(r)
 }
 
 func (r reader) Char() (uint16, error) {
@@ -77,11 +73,11 @@ func (r reader) Char() (uint16, error) {
 }
 
 func (r reader) Int() (int32, error) {
-	return Int(r)
+	return reader2.Int(r)
 }
 
 func (r reader) Long() (int64, error) {
-	return Long(r)
+	return reader2.Long(r)
 }
 
 func (r reader) Float() (float32, error) {
@@ -97,7 +93,7 @@ func (r reader) Double() (float64, error) {
 }
 
 // TODO: Should we differentiate between null and empty?
-func (r reader) String() (string, error) {
+func (r reader) String(pool *CPool) (string, error) {
 	enc, err := r.Byte()
 	if err != nil {
 		return "", err
@@ -107,6 +103,24 @@ func (r reader) String() (string, error) {
 		return "", nil
 	case 1:
 		return "", nil
+	case 2: // constant pool reference
+		idx, err := r.VarLong()
+		if err != nil {
+			fmt.Printf("get constant refrence idx fail: %s\n", err)
+			return "", err
+		}
+		if pool == nil {
+			return "", errors.New("the string constant pool is nil")
+		}
+		v, ok := pool.Pool[int(idx)]
+		if !ok {
+			return "", fmt.Errorf("string not found in the pool")
+		}
+		str, ok := v.(*String)
+		if !ok {
+			return "", fmt.Errorf("not type of parser.String")
+		}
+		return string(*str), nil
 	case 3, 4, 5:
 		return r.utf8()
 	default:

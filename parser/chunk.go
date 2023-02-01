@@ -4,11 +4,21 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+)
 
-	"github.com/pyroscope-io/jfr-parser/reader"
+const (
+	MetadataEventType     = 0
+	ConstantPoolEventType = 1
+
+	EventSuperType = "jdk.jfr.Event"
 )
 
 var magic = []byte{'F', 'L', 'R', 0}
+
+type Version struct {
+	Major uint16
+	Minor uint16
+}
 
 type CPool struct {
 	Pool     map[int]ParseResolvable
@@ -46,13 +56,16 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	if _, err = io.ReadFull(r, buf); err != nil {
 		return fmt.Errorf("unable to read format version: %w", err)
 	}
+
+	fmt.Println("major version: ", int(buf[0])<<8+int(buf[1]), "minor version: ", int(buf[2])<<8+int(buf[3]))
+
 	// TODO Check supported major / minor
 
 	buf = make([]byte, headerSize)
 	if _, err := io.ReadFull(r, buf); err != nil {
 		return fmt.Errorf("unable to read chunk header: %w", err)
 	}
-	if err := c.Header.Parse(reader.NewReader(bytes.NewReader(buf), false)); err != nil {
+	if err := c.Header.Parse(NewReader(bytes.NewReader(buf), false)); err != nil {
 		return fmt.Errorf("unable to parse chunk header: %w", err)
 	}
 	c.Header.ChunkSize -= headerSize + 8
@@ -66,7 +79,7 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	}
 
 	br := bytes.NewReader(buf)
-	rd := reader.NewReader(br, useCompression)
+	rd := NewReader(br, useCompression)
 	pointer := int64(0)
 	events := make(map[int64]int32)
 
@@ -133,12 +146,17 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 			if err != nil {
 				return fmt.Errorf("unable to parse event size: %w", err)
 			}
+			if size == 0 {
+				return fmt.Errorf("found event with invalid size (0)")
+			}
 			events[pointer] = size
 			e, err := ParseEvent(rd, classes, cpools)
 			if err != nil {
 				return fmt.Errorf("unable to parse event: %w", err)
 			}
-			c.Events = append(c.Events, e)
+			if e != nil {
+				c.Events = append(c.Events, e)
+			}
 			pointer += int64(size)
 		}
 	}

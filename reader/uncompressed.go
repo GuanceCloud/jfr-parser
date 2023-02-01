@@ -8,7 +8,7 @@ type uncompressed struct {
 	io.Reader
 }
 
-func newUncompressed(r io.Reader) VarReader {
+func NewUncompressed(r io.Reader) VarReader {
 	return uncompressed{Reader: r}
 }
 

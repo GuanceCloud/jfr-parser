@@ -3,8 +3,6 @@ package parser
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/pyroscope-io/jfr-parser/reader"
 )
 
 type Element interface {
@@ -182,7 +180,7 @@ type MetadataEvent struct {
 	Root      Root
 }
 
-func (m *MetadataEvent) Parse(r reader.Reader) (err error) {
+func (m *MetadataEvent) Parse(r Reader) (err error) {
 	if kind, err := r.VarLong(); err != nil {
 		return fmt.Errorf("unable to retrieve event type: %w", err)
 	} else if kind != 0 {
@@ -205,7 +203,7 @@ func (m *MetadataEvent) Parse(r reader.Reader) (err error) {
 	// TODO: assert n is small enough
 	strings := make([]string, n)
 	for i := 0; i < int(n); i++ {
-		if strings[i], err = r.String(); err != nil {
+		if strings[i], err = r.String(nil); err != nil {
 			return fmt.Errorf("unable to parse metadata event's string: %w", err)
 		}
 	}
@@ -222,10 +220,30 @@ func (m *MetadataEvent) Parse(r reader.Reader) (err error) {
 	if err := parseElement(r, strings, &m.Root); err != nil {
 		return fmt.Errorf("unable to parse metadata element tree: %w", err)
 	}
+
+	classes := make(map[int64]ClassMetadata)
+	for _, clazz := range m.Root.Metadata.Classes {
+		classes[clazz.ID] = clazz
+	}
+
+	for _, clazz := range m.Root.Metadata.Classes {
+		fmt.Println("metadata class name:", clazz.Name)
+
+		for _, anno := range clazz.Annotations {
+			fmt.Println("class annotation class: ", classes[anno.Class].Name, "class annotation value: ", anno.Values)
+		}
+
+		for _, field := range clazz.Fields {
+			fmt.Println("field name:", field.Name, "field ID:", classes[field.Class].Name, "ConstantPool: ", field.ConstantPool, "Dimension:", field.Dimension)
+		}
+		fmt.Println("--------------------------------------")
+
+	}
+
 	return nil
 }
 
-func parseElement(r reader.Reader, s []string, e Element) error {
+func parseElement(r Reader, s []string, e Element) error {
 	n, err := r.VarInt()
 	if err != nil {
 		return fmt.Errorf("unable to parse attribute count: %w", err)
@@ -263,7 +281,7 @@ func parseElement(r reader.Reader, s []string, e Element) error {
 	return nil
 }
 
-func parseName(r reader.Reader, s []string) (string, error) {
+func parseName(r Reader, s []string) (string, error) {
 	n, err := r.VarInt()
 	if err != nil {
 		return "", fmt.Errorf("unable to parse string name index: %w", err)
