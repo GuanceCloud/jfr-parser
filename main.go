@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pyroscope-io/jfr-parser/parser"
+	"github.com/GuanceCloud/jfr-parser/parser"
 )
 
 func main() {

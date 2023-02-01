@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	reader2 "github.com/pyroscope-io/jfr-parser/reader"
 	"io"
+
+	reader2 "github.com/GuanceCloud/jfr-parser/reader"
 )
 
 type Reader interface {
