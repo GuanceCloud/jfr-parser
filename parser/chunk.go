@@ -24,18 +24,18 @@ type CPool struct {
 	Pool     map[int]ParseResolvable
 	resolved bool
 }
-type ClassMap map[int]ClassMetadata
+type ClassMap map[int]*ClassMetadata
 type PoolMap map[int]*CPool
 
 type Chunk struct {
 	Header      Header
 	Metadata    MetadataEvent
 	Checkpoints []CheckpointEvent
-	Events      []Parseable
+	Events      []EventParseable
 }
 
 type ChunkParseOptions struct {
-	CPoolProcessor func(meta ClassMetadata, cpool *CPool)
+	CPoolProcessor func(meta *ClassMetadata, cpool *CPool)
 }
 
 func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
@@ -56,8 +56,6 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	if _, err = io.ReadFull(r, buf); err != nil {
 		return fmt.Errorf("unable to read format version: %w", err)
 	}
-
-	fmt.Println("major version: ", int(buf[0])<<8+int(buf[1]), "minor version: ", int(buf[2])<<8+int(buf[3]))
 
 	// TODO Check supported major / minor
 
@@ -90,11 +88,10 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 		return fmt.Errorf("unable to parse chunk metadata size: %w", err)
 	}
 	events[c.Header.MetadataOffset] = metadataSize
-	var metadata MetadataEvent
-	if err := metadata.Parse(rd); err != nil {
+	if err := c.Metadata.Parse(rd); err != nil {
 		return fmt.Errorf("unable to parse chunk metadata: %w", err)
 	}
-	classes := buildClasses(metadata)
+	classes := buildClasses(c.Metadata)
 
 	// Parse checkpoint event(s)
 	br.Seek(c.Header.ConstantPoolOffset, io.SeekStart)
@@ -164,7 +161,7 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 }
 
 func buildClasses(metadata MetadataEvent) ClassMap {
-	classes := make(map[int]ClassMetadata)
+	classes := make(ClassMap)
 	for _, class := range metadata.Root.Metadata.Classes {
 		classes[int(class.ID)] = class
 	}

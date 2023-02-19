@@ -4,64 +4,76 @@ import (
 	"fmt"
 )
 
-var events = map[string]func() Parseable{
-	"jdk.ActiveRecording":                      func() Parseable { return new(ActiveRecording) },
-	"jdk.ActiveSetting":                        func() Parseable { return new(ActiveSetting) },
-	"jdk.BooleanFlag":                          func() Parseable { return new(BooleanFlag) },
-	"jdk.CPUInformation":                       func() Parseable { return new(CPUInformation) },
-	"jdk.CPULoad":                              func() Parseable { return new(CPULoad) },
-	"jdk.CPUTimeStampCounter":                  func() Parseable { return new(CPUTimeStampCounter) },
-	"jdk.ClassLoaderStatistics":                func() Parseable { return new(ClassLoaderStatistics) },
-	"jdk.ClassLoadingStatistics":               func() Parseable { return new(ClassLoadingStatistics) },
-	"jdk.CodeCacheConfiguration":               func() Parseable { return new(CodeCacheConfiguration) },
-	"jdk.CodeCacheStatistics":                  func() Parseable { return new(CodeCacheStatistics) },
-	"jdk.CodeSweeperConfiguration":             func() Parseable { return new(CodeSweeperConfiguration) },
-	"jdk.CodeSweeperStatistics":                func() Parseable { return new(CodeSweeperStatistics) },
-	"jdk.CompilerConfiguration":                func() Parseable { return new(CompilerConfiguration) },
-	"jdk.CompilerStatistics":                   func() Parseable { return new(CompilerStatistics) },
-	"jdk.DoubleFlag":                           func() Parseable { return new(DoubleFlag) },
-	"jdk.ExceptionStatistics":                  func() Parseable { return new(ExceptionStatistics) },
-	"jdk.ExecutionSample":                      func() Parseable { return new(ExecutionSample) },
-	"jdk.GCConfiguration":                      func() Parseable { return new(GCConfiguration) },
-	"jdk.GCHeapConfiguration":                  func() Parseable { return new(GCHeapConfiguration) },
-	"jdk.GCSurvivorConfiguration":              func() Parseable { return new(GCSurvivorConfiguration) },
-	"jdk.GCTLABConfiguration":                  func() Parseable { return new(GCTLABConfiguration) },
-	"jdk.InitialEnvironmentVariable":           func() Parseable { return new(InitialEnvironmentVariable) },
-	"jdk.InitialSystemProperty":                func() Parseable { return new(InitialSystemProperty) },
-	"jdk.IntFlag":                              func() Parseable { return new(IntFlag) },
-	"jdk.JavaMonitorEnter":                     func() Parseable { return new(JavaMonitorEnter) },
-	"jdk.JavaMonitorWait":                      func() Parseable { return new(JavaMonitorWait) },
-	"jdk.JavaThreadStatistics":                 func() Parseable { return new(JavaThreadStatistics) },
-	"jdk.JVMInformation":                       func() Parseable { return new(JVMInformation) },
-	"jdk.LoaderConstraintsTableStatistics":     func() Parseable { return new(LoaderConstraintsTableStatistics) },
-	"jdk.LongFlag":                             func() Parseable { return new(LongFlag) },
-	"jdk.ModuleExport":                         func() Parseable { return new(ModuleExport) },
-	"jdk.ModuleRequire":                        func() Parseable { return new(ModuleRequire) },
-	"jdk.NativeLibrary":                        func() Parseable { return new(NativeLibrary) },
-	"jdk.NetworkUtilization":                   func() Parseable { return new(NetworkUtilization) },
-	"jdk.ObjectAllocationInNewTLAB":            func() Parseable { return new(ObjectAllocationInNewTLAB) },
-	"jdk.ObjectAllocationOutsideTLAB":          func() Parseable { return new(ObjectAllocationOutsideTLAB) },
-	"jdk.OSInformation":                        func() Parseable { return new(OSInformation) },
-	"jdk.PhysicalMemory":                       func() Parseable { return new(PhysicalMemory) },
-	"jdk.PlaceholderTableStatistics":           func() Parseable { return new(PlaceholderTableStatistics) },
-	"jdk.ProtectionDomainCacheTableStatistics": func() Parseable { return new(ProtectionDomainCacheTableStatistics) },
-	"jdk.StringFlag":                           func() Parseable { return new(StringFlag) },
-	"jdk.StringTableStatistics":                func() Parseable { return new(StringTableStatistics) },
-	"jdk.SymbolTableStatistics":                func() Parseable { return new(SymbolTableStatistics) },
-	"jdk.SystemProcess":                        func() Parseable { return new(SystemProcess) },
-	"jdk.ThreadAllocationStatistics":           func() Parseable { return new(ThreadAllocationStatistics) },
-	"jdk.ThreadCPULoad":                        func() Parseable { return new(ThreadCPULoad) },
-	"jdk.ThreadContextSwitchRate":              func() Parseable { return new(ThreadContextSwitchRate) },
-	"jdk.ThreadDump":                           func() Parseable { return new(ThreadDump) },
-	"jdk.ThreadPark":                           func() Parseable { return new(ThreadPark) },
-	"jdk.ThreadStart":                          func() Parseable { return new(ThreadStart) },
-	"jdk.UnsignedIntFlag":                      func() Parseable { return new(UnsignedIntFlag) },
-	"jdk.UnsignedLongFlag":                     func() Parseable { return new(UnsignedLongFlag) },
-	"jdk.VirtualizationInformation":            func() Parseable { return new(VirtualizationInformation) },
-	"jdk.YoungGenerationConfiguration":         func() Parseable { return new(YoungGenerationConfiguration) },
+var events = map[string]func() EventParseable{
+	"jdk.ActiveRecording":                      func() EventParseable { return new(ActiveRecording) },
+	"jdk.ActiveSetting":                        func() EventParseable { return new(ActiveSetting) },
+	"jdk.BooleanFlag":                          func() EventParseable { return new(BooleanFlag) },
+	"jdk.CPUInformation":                       func() EventParseable { return new(CPUInformation) },
+	"jdk.CPULoad":                              func() EventParseable { return new(CPULoad) },
+	"jdk.CPUTimeStampCounter":                  func() EventParseable { return new(CPUTimeStampCounter) },
+	"jdk.ClassLoaderStatistics":                func() EventParseable { return new(ClassLoaderStatistics) },
+	"jdk.ClassLoadingStatistics":               func() EventParseable { return new(ClassLoadingStatistics) },
+	"jdk.CodeCacheConfiguration":               func() EventParseable { return new(CodeCacheConfiguration) },
+	"jdk.CodeCacheStatistics":                  func() EventParseable { return new(CodeCacheStatistics) },
+	"jdk.CodeSweeperConfiguration":             func() EventParseable { return new(CodeSweeperConfiguration) },
+	"jdk.CodeSweeperStatistics":                func() EventParseable { return new(CodeSweeperStatistics) },
+	"jdk.CompilerConfiguration":                func() EventParseable { return new(CompilerConfiguration) },
+	"jdk.CompilerStatistics":                   func() EventParseable { return new(CompilerStatistics) },
+	"jdk.DoubleFlag":                           func() EventParseable { return new(DoubleFlag) },
+	"jdk.ExceptionStatistics":                  func() EventParseable { return new(ExceptionStatistics) },
+	"jdk.ExecutionSample":                      func() EventParseable { return new(ExecutionSample) },
+	"jdk.GCConfiguration":                      func() EventParseable { return new(GCConfiguration) },
+	"jdk.GCHeapConfiguration":                  func() EventParseable { return new(GCHeapConfiguration) },
+	"jdk.GCSurvivorConfiguration":              func() EventParseable { return new(GCSurvivorConfiguration) },
+	"jdk.GCTLABConfiguration":                  func() EventParseable { return new(GCTLABConfiguration) },
+	"jdk.InitialEnvironmentVariable":           func() EventParseable { return new(InitialEnvironmentVariable) },
+	"jdk.InitialSystemProperty":                func() EventParseable { return new(InitialSystemProperty) },
+	"jdk.IntFlag":                              func() EventParseable { return new(IntFlag) },
+	"jdk.JavaMonitorEnter":                     func() EventParseable { return new(JavaMonitorEnter) },
+	"jdk.JavaMonitorWait":                      func() EventParseable { return new(JavaMonitorWait) },
+	"jdk.JavaThreadStatistics":                 func() EventParseable { return new(JavaThreadStatistics) },
+	"jdk.JVMInformation":                       func() EventParseable { return new(JVMInformation) },
+	"jdk.LoaderConstraintsTableStatistics":     func() EventParseable { return new(LoaderConstraintsTableStatistics) },
+	"jdk.LongFlag":                             func() EventParseable { return new(LongFlag) },
+	"jdk.ModuleExport":                         func() EventParseable { return new(ModuleExport) },
+	"jdk.ModuleRequire":                        func() EventParseable { return new(ModuleRequire) },
+	"jdk.NativeLibrary":                        func() EventParseable { return new(NativeLibrary) },
+	"jdk.NetworkUtilization":                   func() EventParseable { return new(NetworkUtilization) },
+	"jdk.ObjectAllocationInNewTLAB":            func() EventParseable { return new(ObjectAllocationInNewTLAB) },
+	"jdk.ObjectAllocationOutsideTLAB":          func() EventParseable { return new(ObjectAllocationOutsideTLAB) },
+	"jdk.OSInformation":                        func() EventParseable { return new(OSInformation) },
+	"jdk.PhysicalMemory":                       func() EventParseable { return new(PhysicalMemory) },
+	"jdk.PlaceholderTableStatistics":           func() EventParseable { return new(PlaceholderTableStatistics) },
+	"jdk.ProtectionDomainCacheTableStatistics": func() EventParseable { return new(ProtectionDomainCacheTableStatistics) },
+	"jdk.StringFlag":                           func() EventParseable { return new(StringFlag) },
+	"jdk.StringTableStatistics":                func() EventParseable { return new(StringTableStatistics) },
+	"jdk.SymbolTableStatistics":                func() EventParseable { return new(SymbolTableStatistics) },
+	"jdk.SystemProcess":                        func() EventParseable { return new(SystemProcess) },
+	"jdk.ThreadAllocationStatistics":           func() EventParseable { return new(ThreadAllocationStatistics) },
+	"jdk.ThreadCPULoad":                        func() EventParseable { return new(ThreadCPULoad) },
+	"jdk.ThreadContextSwitchRate":              func() EventParseable { return new(ThreadContextSwitchRate) },
+	"jdk.ThreadDump":                           func() EventParseable { return new(ThreadDump) },
+	"jdk.ThreadPark":                           func() EventParseable { return new(ThreadPark) },
+	"jdk.ThreadStart":                          func() EventParseable { return new(ThreadStart) },
+	"jdk.UnsignedIntFlag":                      func() EventParseable { return new(UnsignedIntFlag) },
+	"jdk.UnsignedLongFlag":                     func() EventParseable { return new(UnsignedLongFlag) },
+	"jdk.VirtualizationInformation":            func() EventParseable { return new(VirtualizationInformation) },
+	"jdk.YoungGenerationConfiguration":         func() EventParseable { return new(YoungGenerationConfiguration) },
 }
 
-func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (Parseable, error) {
+type EventBase struct {
+	Metadata *ClassMetadata
+}
+
+func (e *EventBase) SetMetadata(metadata *ClassMetadata) {
+	e.Metadata = metadata
+}
+
+func (e *EventBase) GetMetadata() *ClassMetadata {
+	return e.Metadata
+}
+
+func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (EventParseable, error) {
 	kind, err := r.VarLong()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve event type: %w", err)
@@ -72,7 +84,7 @@ func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (Parseable, error) {
 	return parseEvent(r, classes, cpools, int(kind))
 }
 
-func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (Parseable, error) {
+func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (EventParseable, error) {
 	class, ok := classes[classID]
 	if !ok {
 		return nil, fmt.Errorf("unknown class %d", classID)
@@ -80,12 +92,13 @@ func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (Parsea
 	if class.SuperType != EventSuperType {
 		return nil, nil
 	}
-	var v Parseable
+	var v EventParseable
 	if typeFn, ok := events[class.Name]; ok {
 		v = typeFn()
 	} else {
 		v = new(UnsupportedEvent)
 	}
+	v.SetMetadata(class)
 	if err := v.Parse(r, classes, cpools, class); err != nil {
 		return nil, fmt.Errorf("unable to parse event %s: %w", class.Name, err)
 	}
@@ -93,6 +106,7 @@ func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (Parsea
 }
 
 type ActiveRecording struct {
+	EventBase
 	StartTime         int64
 	Duration          int64
 	EventThread       *Thread
@@ -131,11 +145,12 @@ func (ar *ActiveRecording) parseField(name string, p ParseResolvable) (err error
 	return err
 }
 
-func (ar *ActiveRecording) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ar *ActiveRecording) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ar.parseField)
 }
 
 type ActiveSetting struct {
+	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -162,11 +177,12 @@ func (as *ActiveSetting) parseField(name string, p ParseResolvable) (err error) 
 	return err
 }
 
-func (as *ActiveSetting) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (as *ActiveSetting) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, as.parseField)
 }
 
 type BooleanFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     bool
@@ -187,11 +203,12 @@ func (bf *BooleanFlag) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (bf *BooleanFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (bf *BooleanFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, bf.parseField)
 }
 
 type CPUInformation struct {
+	EventBase
 	StartTime   int64
 	CPU         string
 	Description string
@@ -218,11 +235,12 @@ func (ci *CPUInformation) parseField(name string, p ParseResolvable) (err error)
 	return err
 }
 
-func (ci *CPUInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ci *CPUInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ci.parseField)
 }
 
 type CPULoad struct {
+	EventBase
 	StartTime    int64
 	JVMUser      float32
 	JVMSystem    float32
@@ -243,11 +261,12 @@ func (cl *CPULoad) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (cl *CPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (cl *CPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, cl.parseField)
 }
 
 type CPUTimeStampCounter struct {
+	EventBase
 	StartTime           int64
 	FastTimeEnabled     bool
 	FastTimeAutoEnabled bool
@@ -271,11 +290,12 @@ func (ctsc *CPUTimeStampCounter) parseField(name string, p ParseResolvable) (err
 	return err
 }
 
-func (ctsc *CPUTimeStampCounter) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ctsc *CPUTimeStampCounter) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ctsc.parseField)
 }
 
 type ClassLoaderStatistics struct {
+	EventBase
 	StartTime                 int64
 	ClassLoader               *ClassLoader
 	ParentClassLoader         *ClassLoader
@@ -332,11 +352,12 @@ func (cls *ClassLoaderStatistics) parseField(name string, p ParseResolvable) (er
 	return err
 }
 
-func (cls *ClassLoaderStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (cls *ClassLoaderStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, cls.parseField)
 }
 
 type ClassLoadingStatistics struct {
+	EventBase
 	StartTime          int64
 	LoadedClassCount   int64
 	UnloadedClassCount int64
@@ -354,11 +375,12 @@ func (cls *ClassLoadingStatistics) parseField(name string, p ParseResolvable) (e
 	return err
 }
 
-func (cls *ClassLoadingStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (cls *ClassLoadingStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, cls.parseField)
 }
 
 type CodeCacheConfiguration struct {
+	EventBase
 	StartTime          int64
 	InitialSize        int64
 	ReservedSize       int64
@@ -397,11 +419,12 @@ func (ccc *CodeCacheConfiguration) parseField(name string, p ParseResolvable) (e
 	return err
 }
 
-func (ccc *CodeCacheConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ccc *CodeCacheConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ccc.parseField)
 }
 
 type CodeCacheStatistics struct {
+	EventBase
 	StartTime           int64
 	CodeBlobType        *CodeBlobType
 	StartAddress        int64
@@ -437,11 +460,12 @@ func (ccs *CodeCacheStatistics) parseField(name string, p ParseResolvable) (err 
 	return err
 }
 
-func (ccs *CodeCacheStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ccs *CodeCacheStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ccs.parseField)
 }
 
 type CodeSweeperConfiguration struct {
+	EventBase
 	StartTime       int64
 	SweeperEnabled  bool
 	FlushingEnabled bool
@@ -462,11 +486,12 @@ func (csc *CodeSweeperConfiguration) parseField(name string, p ParseResolvable) 
 	return err
 }
 
-func (csc *CodeSweeperConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (csc *CodeSweeperConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, csc.parseField)
 }
 
 type CodeSweeperStatistics struct {
+	EventBase
 	StartTime            int64
 	SweepCount           int32
 	MethodReclaimedCount int32
@@ -493,11 +518,12 @@ func (css *CodeSweeperStatistics) parseField(name string, p ParseResolvable) (er
 	return err
 }
 
-func (css *CodeSweeperStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (css *CodeSweeperStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, css.parseField)
 }
 
 type CompilerConfiguration struct {
+	EventBase
 	StartTime         int64
 	ThreadCount       int32
 	TieredCompilation bool
@@ -515,11 +541,12 @@ func (cc *CompilerConfiguration) parseField(name string, p ParseResolvable) (err
 	return err
 }
 
-func (cc *CompilerConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (cc *CompilerConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, cc.parseField)
 }
 
 type CompilerStatistics struct {
+	EventBase
 	StartTime             int64
 	CompileCount          int32
 	BailoutCount          int32
@@ -564,11 +591,12 @@ func (cs *CompilerStatistics) parseField(name string, p ParseResolvable) (err er
 	return err
 }
 
-func (cs *CompilerStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (cs *CompilerStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, cs.parseField)
 }
 
 type DoubleFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     float64
@@ -589,11 +617,12 @@ func (df *DoubleFlag) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (df *DoubleFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (df *DoubleFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, df.parseField)
 }
 
 type ExceptionStatistics struct {
+	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -617,11 +646,12 @@ func (es *ExceptionStatistics) parseField(name string, p ParseResolvable) (err e
 	return err
 }
 
-func (es *ExceptionStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (es *ExceptionStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, es.parseField)
 }
 
 type ExecutionSample struct {
+	EventBase
 	StartTime     int64
 	SampledThread *Thread
 	StackTrace    *StackTrace
@@ -645,11 +675,12 @@ func (es *ExecutionSample) parseField(name string, p ParseResolvable) (err error
 	return err
 }
 
-func (es *ExecutionSample) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (es *ExecutionSample) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, es.parseField)
 }
 
 type GCConfiguration struct {
+	EventBase
 	StartTime              int64
 	YoungCollector         *GCName
 	OldCollector           *GCName
@@ -688,11 +719,12 @@ func (gc *GCConfiguration) parseField(name string, p ParseResolvable) (err error
 	return err
 }
 
-func (gc *GCConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (gc *GCConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, gc.parseField)
 }
 
 type GCHeapConfiguration struct {
+	EventBase
 	StartTime          int64
 	MinSize            int64
 	MaxSize            int64
@@ -725,11 +757,12 @@ func (ghc *GCHeapConfiguration) parseField(name string, p ParseResolvable) (err 
 	return err
 }
 
-func (ghc *GCHeapConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ghc *GCHeapConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ghc.parseField)
 }
 
 type GCSurvivorConfiguration struct {
+	EventBase
 	StartTime                int64
 	MaxTenuringThreshold     int8
 	InitialTenuringThreshold int8
@@ -747,11 +780,12 @@ func (gcs *GCSurvivorConfiguration) parseField(name string, p ParseResolvable) (
 	return err
 }
 
-func (gsc *GCSurvivorConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (gsc *GCSurvivorConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, gsc.parseField)
 }
 
 type GCTLABConfiguration struct {
+	EventBase
 	StartTime            int64
 	UsesTLABs            bool
 	MinTLABSize          int64
@@ -772,11 +806,12 @@ func (gtc *GCTLABConfiguration) parseField(name string, p ParseResolvable) (err 
 	return err
 }
 
-func (gtc *GCTLABConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (gtc *GCTLABConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, gtc.parseField)
 }
 
 type InitialEnvironmentVariable struct {
+	EventBase
 	StartTime int64
 	Key       string
 	Value     string
@@ -794,11 +829,12 @@ func (iev *InitialEnvironmentVariable) parseField(name string, p ParseResolvable
 	return err
 }
 
-func (iev *InitialEnvironmentVariable) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (iev *InitialEnvironmentVariable) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, iev.parseField)
 }
 
 type InitialSystemProperty struct {
+	EventBase
 	StartTime int64
 	Key       string
 	Value     string
@@ -816,11 +852,12 @@ func (isp *InitialSystemProperty) parseField(name string, p ParseResolvable) (er
 	return err
 }
 
-func (isp *InitialSystemProperty) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (isp *InitialSystemProperty) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, isp.parseField)
 }
 
 type IntFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     int32
@@ -841,11 +878,12 @@ func (f *IntFlag) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (f *IntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (f *IntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, f.parseField)
 }
 
 type JavaMonitorEnter struct {
+	EventBase
 	StartTime     int64
 	Duration      int64
 	EventThread   *Thread
@@ -878,11 +916,12 @@ func (jme *JavaMonitorEnter) parseField(name string, p ParseResolvable) (err err
 	return err
 }
 
-func (jme *JavaMonitorEnter) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (jme *JavaMonitorEnter) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, jme.parseField)
 }
 
 type JavaMonitorWait struct {
+	EventBase
 	StartTime    int64
 	Duration     int64
 	EventThread  *Thread
@@ -918,11 +957,12 @@ func (jmw *JavaMonitorWait) parseField(name string, p ParseResolvable) (err erro
 	return err
 }
 
-func (jmw *JavaMonitorWait) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (jmw *JavaMonitorWait) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, jmw.parseField)
 }
 
 type JavaThreadStatistics struct {
+	EventBase
 	StartTime        int64
 	ActiveCount      int64
 	DaemonCount      int64
@@ -946,11 +986,12 @@ func (jts *JavaThreadStatistics) parseField(name string, p ParseResolvable) (err
 	return err
 }
 
-func (jts *JavaThreadStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (jts *JavaThreadStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, jts.parseField)
 }
 
 type JVMInformation struct {
+	EventBase
 	StartTime     int64
 	JVMName       string
 	JVMVersion    string
@@ -983,11 +1024,12 @@ func (ji *JVMInformation) parseField(name string, p ParseResolvable) (err error)
 	return err
 }
 
-func (ji *JVMInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ji *JVMInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ji.parseField)
 }
 
 type LoaderConstraintsTableStatistics struct {
+	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1026,11 +1068,12 @@ func (lcts *LoaderConstraintsTableStatistics) parseField(name string, p ParseRes
 	return err
 }
 
-func (lcts *LoaderConstraintsTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (lcts *LoaderConstraintsTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, lcts.parseField)
 }
 
 type LongFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     int64
@@ -1051,11 +1094,12 @@ func (lf *LongFlag) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (lf *LongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (lf *LongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, lf.parseField)
 }
 
 type ModuleExport struct {
+	EventBase
 	StartTime       int64
 	ExportedPackage *Package
 	TargetModule    *Module
@@ -1073,11 +1117,12 @@ func (me *ModuleExport) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (me *ModuleExport) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (me *ModuleExport) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, me.parseField)
 }
 
 type ModuleRequire struct {
+	EventBase
 	StartTime      int64
 	Source         *Module
 	RequiredModule *Module
@@ -1095,11 +1140,12 @@ func (mr *ModuleRequire) parseField(name string, p ParseResolvable) (err error) 
 	return err
 }
 
-func (mr *ModuleRequire) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (mr *ModuleRequire) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, mr.parseField)
 }
 
 type NativeLibrary struct {
+	EventBase
 	StartTime   int64
 	Name        string
 	BaseAddress int64
@@ -1120,11 +1166,12 @@ func (nl *NativeLibrary) parseField(name string, p ParseResolvable) (err error) 
 	return err
 }
 
-func (nl *NativeLibrary) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (nl *NativeLibrary) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, nl.parseField)
 }
 
 type NetworkUtilization struct {
+	EventBase
 	StartTime        int64
 	NetworkInterface *NetworkInterfaceName
 	ReadRate         int64
@@ -1145,11 +1192,12 @@ func (nu *NetworkUtilization) parseField(name string, p ParseResolvable) (err er
 	return err
 }
 
-func (nu *NetworkUtilization) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (nu *NetworkUtilization) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, nu.parseField)
 }
 
 type ObjectAllocationInNewTLAB struct {
+	EventBase
 	StartTime      int64
 	EventThread    *Thread
 	StackTrace     *StackTrace
@@ -1180,11 +1228,12 @@ func (oa *ObjectAllocationInNewTLAB) parseField(name string, p ParseResolvable) 
 	return err
 }
 
-func (oa *ObjectAllocationInNewTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (oa *ObjectAllocationInNewTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, oa.parseField)
 }
 
 type ObjectAllocationOutsideTLAB struct {
+	EventBase
 	StartTime      int64
 	EventThread    *Thread
 	StackTrace     *StackTrace
@@ -1211,11 +1260,12 @@ func (oa *ObjectAllocationOutsideTLAB) parseField(name string, p ParseResolvable
 	return err
 }
 
-func (oa *ObjectAllocationOutsideTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (oa *ObjectAllocationOutsideTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, oa.parseField)
 }
 
 type OSInformation struct {
+	EventBase
 	StartTime int64
 	OSVersion string
 }
@@ -1230,11 +1280,12 @@ func (os *OSInformation) parseField(name string, p ParseResolvable) (err error) 
 	return err
 }
 
-func (os *OSInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (os *OSInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, os.parseField)
 }
 
 type PhysicalMemory struct {
+	EventBase
 	StartTime int64
 	TotalSize int64
 	UsedSize  int64
@@ -1252,11 +1303,12 @@ func (pm *PhysicalMemory) parseField(name string, p ParseResolvable) (err error)
 	return err
 }
 
-func (pm *PhysicalMemory) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (pm *PhysicalMemory) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, pm.parseField)
 }
 
 type PlaceholderTableStatistics struct {
+	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1295,11 +1347,12 @@ func (pts *PlaceholderTableStatistics) parseField(name string, p ParseResolvable
 	return err
 }
 
-func (pts *PlaceholderTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (pts *PlaceholderTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, pts.parseField)
 }
 
 type ProtectionDomainCacheTableStatistics struct {
+	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1338,11 +1391,12 @@ func (pdcts *ProtectionDomainCacheTableStatistics) parseField(name string, p Par
 	return err
 }
 
-func (pdcts *ProtectionDomainCacheTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (pdcts *ProtectionDomainCacheTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, pdcts.parseField)
 }
 
 type StringFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     string
@@ -1363,11 +1417,12 @@ func (sf *StringFlag) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (sf *StringFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (sf *StringFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, sf.parseField)
 }
 
 type StringTableStatistics struct {
+	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1406,11 +1461,12 @@ func (sts *StringTableStatistics) parseField(name string, p ParseResolvable) (er
 	return err
 }
 
-func (sts *StringTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (sts *StringTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, sts.parseField)
 }
 
 type SymbolTableStatistics struct {
+	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1449,11 +1505,12 @@ func (sts *SymbolTableStatistics) parseField(name string, p ParseResolvable) (er
 	return err
 }
 
-func (sts *SymbolTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (sts *SymbolTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, sts.parseField)
 }
 
 type SystemProcess struct {
+	EventBase
 	StartTime   int64
 	PID         string
 	CommandLine string
@@ -1471,11 +1528,12 @@ func (sp *SystemProcess) parseField(name string, p ParseResolvable) (err error) 
 	return err
 }
 
-func (sp *SystemProcess) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (sp *SystemProcess) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, sp.parseField)
 }
 
 type ThreadAllocationStatistics struct {
+	EventBase
 	StartTime int64
 	Allocated int64
 	Thread    *Thread
@@ -1493,11 +1551,12 @@ func (tas *ThreadAllocationStatistics) parseField(name string, p ParseResolvable
 	return err
 }
 
-func (tas *ThreadAllocationStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (tas *ThreadAllocationStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, tas.parseField)
 }
 
 type ThreadCPULoad struct {
+	EventBase
 	StartTime   int64
 	EventThread *Thread
 	User        float32
@@ -1518,11 +1577,12 @@ func (tcl *ThreadCPULoad) parseField(name string, p ParseResolvable) (err error)
 	return err
 }
 
-func (tcl *ThreadCPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (tcl *ThreadCPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, tcl.parseField)
 }
 
 type ThreadContextSwitchRate struct {
+	EventBase
 	StartTime  int64
 	SwitchRate float32
 }
@@ -1537,11 +1597,12 @@ func (tcsr *ThreadContextSwitchRate) parseField(name string, p ParseResolvable) 
 	return err
 }
 
-func (tcsr *ThreadContextSwitchRate) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (tcsr *ThreadContextSwitchRate) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, tcsr.parseField)
 }
 
 type ThreadDump struct {
+	EventBase
 	StartTime int64
 	Result    string
 }
@@ -1556,11 +1617,12 @@ func (td *ThreadDump) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (td *ThreadDump) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (td *ThreadDump) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, td.parseField)
 }
 
 type ThreadPark struct {
+	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -1596,11 +1658,12 @@ func (tp *ThreadPark) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (tp *ThreadPark) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (tp *ThreadPark) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, tp.parseField)
 }
 
 type ThreadStart struct {
+	EventBase
 	StartTime    int64
 	EventThread  *Thread
 	StackTrace   *StackTrace
@@ -1624,11 +1687,12 @@ func (ts *ThreadStart) parseField(name string, p ParseResolvable) (err error) {
 	return err
 }
 
-func (ts *ThreadStart) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ts *ThreadStart) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ts.parseField)
 }
 
 type UnsignedIntFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     int32
@@ -1649,11 +1713,12 @@ func (uif *UnsignedIntFlag) parseField(name string, p ParseResolvable) (err erro
 	return err
 }
 
-func (uif *UnsignedIntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (uif *UnsignedIntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, uif.parseField)
 }
 
 type UnsignedLongFlag struct {
+	EventBase
 	StartTime int64
 	Name      string
 	Value     int64
@@ -1674,11 +1739,12 @@ func (ulf *UnsignedLongFlag) parseField(name string, p ParseResolvable) (err err
 	return err
 }
 
-func (ulf *UnsignedLongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ulf *UnsignedLongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ulf.parseField)
 }
 
 type VirtualizationInformation struct {
+	EventBase
 	StartTime int64
 	Name      string
 }
@@ -1693,11 +1759,12 @@ func (vi *VirtualizationInformation) parseField(name string, p ParseResolvable) 
 	return err
 }
 
-func (vi *VirtualizationInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (vi *VirtualizationInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, vi.parseField)
 }
 
 type YoungGenerationConfiguration struct {
+	EventBase
 	StartTime int64
 	MinSize   int64
 	MaxSize   int64
@@ -1718,16 +1785,18 @@ func (ygc *YoungGenerationConfiguration) parseField(name string, p ParseResolvab
 	return err
 }
 
-func (ygc *YoungGenerationConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ygc *YoungGenerationConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ygc.parseField)
 }
 
-type UnsupportedEvent struct{}
+type UnsupportedEvent struct {
+	EventBase
+}
 
 func (ue *UnsupportedEvent) parseField(name string, p ParseResolvable) error {
 	return nil
 }
 
-func (ue *UnsupportedEvent) Parse(r Reader, classes ClassMap, cpools PoolMap, class ClassMetadata) error {
+func (ue *UnsupportedEvent) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
 	return parseFields(r, classes, cpools, class, nil, true, ue.parseField)
 }

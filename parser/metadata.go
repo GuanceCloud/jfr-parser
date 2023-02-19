@@ -28,7 +28,7 @@ func (a *AnnotationMetadata) SetAttribute(key, value string) (err error) {
 	return err
 }
 
-func (a AnnotationMetadata) AppendChild(string) Element { return nil }
+func (a *AnnotationMetadata) AppendChild(string) Element { return nil }
 
 // TODO: Proper attribute support for SettingMetadata
 type SettingMetadata struct {
@@ -43,7 +43,7 @@ func (s *SettingMetadata) SetAttribute(key, value string) error {
 	return nil
 }
 
-func (s SettingMetadata) AppendChild(string) Element { return nil }
+func (s *SettingMetadata) AppendChild(string) Element { return nil }
 
 type FieldMetadata struct {
 	Class        int64
@@ -118,16 +118,16 @@ func (c *ClassMetadata) AppendChild(name string) Element {
 }
 
 type Metadata struct {
-	Classes []ClassMetadata
+	Classes []*ClassMetadata
 }
 
-func (m Metadata) SetAttribute(string, string) error { return nil }
+func (m *Metadata) SetAttribute(string, string) error { return nil }
 
 func (m *Metadata) AppendChild(name string) Element {
 	switch name {
 	case "class":
-		m.Classes = append(m.Classes, ClassMetadata{})
-		return &m.Classes[len(m.Classes)-1]
+		m.Classes = append(m.Classes, &ClassMetadata{})
+		return m.Classes[len(m.Classes)-1]
 	}
 	return nil
 }
@@ -152,20 +152,20 @@ func (m *Region) SetAttribute(key, value string) error {
 	return nil
 }
 
-func (m Region) AppendChild(string) Element { return nil }
+func (m *Region) AppendChild(string) Element { return nil }
 
 type Root struct {
-	Metadata Metadata
+	Metadata *Metadata
 	Region   Region
 }
 
-func (r Root) SetAttribute(string, string) error { return nil }
+func (r *Root) SetAttribute(string, string) error { return nil }
 
 func (r *Root) AppendChild(name string) Element {
 	switch name {
 	case "metadata":
-		r.Metadata = Metadata{}
-		return &r.Metadata
+		r.Metadata = &Metadata{}
+		return r.Metadata
 	case "region":
 		r.Region = Region{}
 		return &r.Region
@@ -221,7 +221,7 @@ func (m *MetadataEvent) Parse(r Reader) (err error) {
 		return fmt.Errorf("unable to parse metadata element tree: %w", err)
 	}
 
-	classes := make(map[int64]ClassMetadata)
+	classes := make(map[int64]*ClassMetadata)
 	for _, clazz := range m.Root.Metadata.Classes {
 		classes[clazz.ID] = clazz
 	}

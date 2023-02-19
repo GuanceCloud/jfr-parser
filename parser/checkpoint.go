@@ -37,7 +37,6 @@ func (c *CheckpointEvent) Parse(r Reader, classes ClassMap, cpools PoolMap) (err
 		if err != nil {
 			return fmt.Errorf("unable to parse constant pool class: %w", err)
 		}
-		fmt.Println("resolve constant pool for class :", classes[int(classID)].Name)
 		cm, ok := cpools[int(classID)]
 		if !ok {
 			cpools[int(classID)] = &CPool{Pool: make(map[int]ParseResolvable)}
