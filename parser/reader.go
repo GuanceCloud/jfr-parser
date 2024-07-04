@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	reader2 "github.com/GuanceCloud/jfr-parser/reader"
+	reader2 "github.com/grafana/jfr-parser/reader"
 )
 
 type Reader interface {
