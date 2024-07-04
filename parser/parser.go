@@ -6,7 +6,7 @@ import (
 )
 
 func Parse(r io.Reader) ([]Chunk, error) {
-	rc, err := Uncompress(r)
+	rc, err := Decompress(r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decompress input stream: %w", err)
 	}

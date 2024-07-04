@@ -5,6 +5,36 @@ import (
 	"fmt"
 )
 
+/**
+field class ID: -----------------:  jdk.types.GCCause
+field class ID: -----------------:  jdk.types.ReferenceType
+field class ID: -----------------:  jdk.types.OldObjectArray
+field class ID: -----------------:  jdk.types.VirtualSpace
+field class ID: -----------------:  jdk.types.MetaspaceSizes
+field class ID: -----------------:  jdk.types.CompilerPhaseType
+field class ID: -----------------:  jdk.types.OldObjectGcRoot
+field class ID: -----------------:  jdk.types.ThreadGroup
+field class ID: -----------------:  jdk.types.OldObject
+field class ID: -----------------:  jdk.types.CalleeMethod
+field class ID: -----------------:  jdk.types.MetadataType
+field class ID: -----------------:  jdk.types.MetaspaceObjectType
+field class ID: -----------------:  jdk.types.ZStatisticsSamplerType
+field class ID: -----------------:  jdk.types.GCThresholdUpdater
+field class ID: -----------------:  jdk.types.OldObjectRootType
+field class ID: -----------------:  jdk.types.Reference
+field class ID: -----------------:  jdk.types.GCWhen
+field class ID: -----------------:  jdk.types.G1HeapRegionType
+field class ID: -----------------:  jdk.types.ZStatisticsCounterType
+field class ID: -----------------:  jdk.types.ShenandoahHeapRegionState
+field class ID: -----------------:  jdk.types.ObjectSpace
+field class ID: -----------------:  jdk.types.VMOperationType
+field class ID: -----------------:  jdk.types.OldObjectRootSystem
+field class ID: -----------------:  jdk.types.OldObjectField
+field class ID: -----------------:  jdk.types.InflateCause
+field class ID: -----------------:  jdk.types.G1EvacuationStatistics
+field class ID: -----------------:  jdk.types.CopyFailed
+*/
+
 var types = map[string]func() ParseResolvable{
 	"boolean": func() ParseResolvable { return new(Boolean) },
 	"byte":    func() ParseResolvable { return new(Byte) },
@@ -52,7 +82,7 @@ func ParseClass(r Reader, classes ClassMap, cpools PoolMap, classID int64) (Pars
 	return v, nil
 }
 
-type EventParseable interface {
+type Event interface {
 	Parseable
 	SetMetadata(metadata *ClassMetadata)
 	GetMetadata() *ClassMetadata
@@ -350,7 +380,7 @@ func (s *String) Parse(r Reader, classMap ClassMap, pools PoolMap, classMetadata
 	pool := pools[int(classMetadata.ID)]
 
 	if classMap[int(classMetadata.ID)].Name != "java.lang.String" {
-		fmt.Println("夭寿啦，竟然不是String")
+		return fmt.Errorf("expect type of java.lang.String, got type %s", classMap[int(classMetadata.ID)].Name)
 	}
 
 	x, err := r.String(pool)

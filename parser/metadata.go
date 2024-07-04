@@ -226,18 +226,27 @@ func (m *MetadataEvent) Parse(r Reader) (err error) {
 		classes[clazz.ID] = clazz
 	}
 
+	fieldIDs := make(map[string]struct{})
+
 	for _, clazz := range m.Root.Metadata.Classes {
 		fmt.Println("metadata class name:", clazz.Name)
 
-		for _, anno := range clazz.Annotations {
-			fmt.Println("class annotation class: ", classes[anno.Class].Name, "class annotation value: ", anno.Values)
-		}
+		//for _, anno := range clazz.Annotations {
+		//	fmt.Println("class annotation class: ", classes[anno.Class].Name)
+		//	fmt.Println("class annotation value: ", anno.Values)
+		//}
 
 		for _, field := range clazz.Fields {
-			fmt.Println("field name:", field.Name, "field ID:", classes[field.Class].Name, "ConstantPool: ", field.ConstantPool, "Dimension:", field.Dimension)
+			//fmt.Println("field name:", field.Name, "ConstantPool: ", field.ConstantPool, "Dimension:", field.Dimension)
+			//fmt.Println("field ID: ", classes[field.Class].Name)
+			fieldIDs[classes[field.Class].Name] = struct{}{}
 		}
-		fmt.Println("--------------------------------------")
+		//fmt.Println("--------------------------------------")
 
+	}
+
+	for k := range fieldIDs {
+		fmt.Println("field class ID: -----------------: ", k)
 	}
 
 	return nil

@@ -31,7 +31,7 @@ type Chunk struct {
 	Header      Header
 	Metadata    MetadataEvent
 	Checkpoints []CheckpointEvent
-	Events      []EventParseable
+	Events      []Event
 }
 
 type ChunkParseOptions struct {
@@ -82,7 +82,9 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	events := make(map[int64]int32)
 
 	// Parse metadata
-	br.Seek(c.Header.MetadataOffset, io.SeekStart)
+	if _, err := br.Seek(c.Header.MetadataOffset, io.SeekStart); err != nil {
+		return fmt.Errorf("unable to seek reader: %w", err)
+	}
 	metadataSize, err := rd.VarInt()
 	if err != nil {
 		return fmt.Errorf("unable to parse chunk metadata size: %w", err)
@@ -94,7 +96,9 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	classes := buildClasses(c.Metadata)
 
 	// Parse checkpoint event(s)
-	br.Seek(c.Header.ConstantPoolOffset, io.SeekStart)
+	if _, err := br.Seek(c.Header.ConstantPoolOffset, io.SeekStart); err != nil {
+		return fmt.Errorf("unable to seek reader: %w", err)
+	}
 	checkpointsSize := int32(0)
 	cpools := make(PoolMap)
 	delta := int64(0)
@@ -114,7 +118,9 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 			break
 		}
 		delta += cp.Delta
-		br.Seek(c.Header.ConstantPoolOffset+delta, io.SeekStart)
+		if _, err := br.Seek(c.Header.ConstantPoolOffset+delta, io.SeekStart); err != nil {
+			return fmt.Errorf("unable to seek reader: %w", err)
+		}
 	}
 
 	if options.CPoolProcessor != nil {
@@ -131,7 +137,9 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 	}
 
 	// Parse the rest of events
-	br.Seek(pointer, io.SeekStart)
+	if _, err := br.Seek(pointer, io.SeekStart); err != nil {
+		return fmt.Errorf("unable to seek reader: %w", err)
+	}
 	for pointer != c.Header.ChunkSize {
 		if size, ok := events[pointer]; ok {
 			pointer += int64(size)

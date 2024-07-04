@@ -2,63 +2,257 @@ package parser
 
 import (
 	"fmt"
+	"reflect"
 )
 
-var events = map[string]func() EventParseable{
-	"jdk.ActiveRecording":                      func() EventParseable { return new(ActiveRecording) },
-	"jdk.ActiveSetting":                        func() EventParseable { return new(ActiveSetting) },
-	"jdk.BooleanFlag":                          func() EventParseable { return new(BooleanFlag) },
-	"jdk.CPUInformation":                       func() EventParseable { return new(CPUInformation) },
-	"jdk.CPULoad":                              func() EventParseable { return new(CPULoad) },
-	"jdk.CPUTimeStampCounter":                  func() EventParseable { return new(CPUTimeStampCounter) },
-	"jdk.ClassLoaderStatistics":                func() EventParseable { return new(ClassLoaderStatistics) },
-	"jdk.ClassLoadingStatistics":               func() EventParseable { return new(ClassLoadingStatistics) },
-	"jdk.CodeCacheConfiguration":               func() EventParseable { return new(CodeCacheConfiguration) },
-	"jdk.CodeCacheStatistics":                  func() EventParseable { return new(CodeCacheStatistics) },
-	"jdk.CodeSweeperConfiguration":             func() EventParseable { return new(CodeSweeperConfiguration) },
-	"jdk.CodeSweeperStatistics":                func() EventParseable { return new(CodeSweeperStatistics) },
-	"jdk.CompilerConfiguration":                func() EventParseable { return new(CompilerConfiguration) },
-	"jdk.CompilerStatistics":                   func() EventParseable { return new(CompilerStatistics) },
-	"jdk.DoubleFlag":                           func() EventParseable { return new(DoubleFlag) },
-	"jdk.ExceptionStatistics":                  func() EventParseable { return new(ExceptionStatistics) },
-	"jdk.ExecutionSample":                      func() EventParseable { return new(ExecutionSample) },
-	"jdk.GCConfiguration":                      func() EventParseable { return new(GCConfiguration) },
-	"jdk.GCHeapConfiguration":                  func() EventParseable { return new(GCHeapConfiguration) },
-	"jdk.GCSurvivorConfiguration":              func() EventParseable { return new(GCSurvivorConfiguration) },
-	"jdk.GCTLABConfiguration":                  func() EventParseable { return new(GCTLABConfiguration) },
-	"jdk.InitialEnvironmentVariable":           func() EventParseable { return new(InitialEnvironmentVariable) },
-	"jdk.InitialSystemProperty":                func() EventParseable { return new(InitialSystemProperty) },
-	"jdk.IntFlag":                              func() EventParseable { return new(IntFlag) },
-	"jdk.JavaMonitorEnter":                     func() EventParseable { return new(JavaMonitorEnter) },
-	"jdk.JavaMonitorWait":                      func() EventParseable { return new(JavaMonitorWait) },
-	"jdk.JavaThreadStatistics":                 func() EventParseable { return new(JavaThreadStatistics) },
-	"jdk.JVMInformation":                       func() EventParseable { return new(JVMInformation) },
-	"jdk.LoaderConstraintsTableStatistics":     func() EventParseable { return new(LoaderConstraintsTableStatistics) },
-	"jdk.LongFlag":                             func() EventParseable { return new(LongFlag) },
-	"jdk.ModuleExport":                         func() EventParseable { return new(ModuleExport) },
-	"jdk.ModuleRequire":                        func() EventParseable { return new(ModuleRequire) },
-	"jdk.NativeLibrary":                        func() EventParseable { return new(NativeLibrary) },
-	"jdk.NetworkUtilization":                   func() EventParseable { return new(NetworkUtilization) },
-	"jdk.ObjectAllocationInNewTLAB":            func() EventParseable { return new(ObjectAllocationInNewTLAB) },
-	"jdk.ObjectAllocationOutsideTLAB":          func() EventParseable { return new(ObjectAllocationOutsideTLAB) },
-	"jdk.OSInformation":                        func() EventParseable { return new(OSInformation) },
-	"jdk.PhysicalMemory":                       func() EventParseable { return new(PhysicalMemory) },
-	"jdk.PlaceholderTableStatistics":           func() EventParseable { return new(PlaceholderTableStatistics) },
-	"jdk.ProtectionDomainCacheTableStatistics": func() EventParseable { return new(ProtectionDomainCacheTableStatistics) },
-	"jdk.StringFlag":                           func() EventParseable { return new(StringFlag) },
-	"jdk.StringTableStatistics":                func() EventParseable { return new(StringTableStatistics) },
-	"jdk.SymbolTableStatistics":                func() EventParseable { return new(SymbolTableStatistics) },
-	"jdk.SystemProcess":                        func() EventParseable { return new(SystemProcess) },
-	"jdk.ThreadAllocationStatistics":           func() EventParseable { return new(ThreadAllocationStatistics) },
-	"jdk.ThreadCPULoad":                        func() EventParseable { return new(ThreadCPULoad) },
-	"jdk.ThreadContextSwitchRate":              func() EventParseable { return new(ThreadContextSwitchRate) },
-	"jdk.ThreadDump":                           func() EventParseable { return new(ThreadDump) },
-	"jdk.ThreadPark":                           func() EventParseable { return new(ThreadPark) },
-	"jdk.ThreadStart":                          func() EventParseable { return new(ThreadStart) },
-	"jdk.UnsignedIntFlag":                      func() EventParseable { return new(UnsignedIntFlag) },
-	"jdk.UnsignedLongFlag":                     func() EventParseable { return new(UnsignedLongFlag) },
-	"jdk.VirtualizationInformation":            func() EventParseable { return new(VirtualizationInformation) },
-	"jdk.YoungGenerationConfiguration":         func() EventParseable { return new(YoungGenerationConfiguration) },
+var events = map[string]func() Event{
+	"jdk.ActiveRecording":                      func() Event { return new(ActiveRecording) },
+	"jdk.ActiveSetting":                        func() Event { return new(ActiveSetting) },
+	"jdk.BooleanFlag":                          func() Event { return new(BooleanFlag) },
+	"jdk.CPUInformation":                       func() Event { return new(CPUInformation) },
+	"jdk.CPULoad":                              func() Event { return new(CPULoad) },
+	"jdk.CPUTimeStampCounter":                  func() Event { return new(CPUTimeStampCounter) },
+	"jdk.ClassLoaderStatistics":                func() Event { return new(ClassLoaderStatistics) },
+	"jdk.ClassLoadingStatistics":               func() Event { return new(ClassLoadingStatistics) },
+	"jdk.CodeCacheConfiguration":               func() Event { return new(CodeCacheConfiguration) },
+	"jdk.CodeCacheStatistics":                  func() Event { return new(CodeCacheStatistics) },
+	"jdk.CodeSweeperConfiguration":             func() Event { return new(CodeSweeperConfiguration) },
+	"jdk.CodeSweeperStatistics":                func() Event { return new(CodeSweeperStatistics) },
+	"jdk.CompilerConfiguration":                func() Event { return new(CompilerConfiguration) },
+	"jdk.CompilerStatistics":                   func() Event { return new(CompilerStatistics) },
+	"jdk.DoubleFlag":                           func() Event { return new(DoubleFlag) },
+	"jdk.ExceptionStatistics":                  func() Event { return new(ExceptionStatistics) },
+	"jdk.ExecutionSample":                      func() Event { return new(ExecutionSample) },
+	"jdk.GCConfiguration":                      func() Event { return new(GCConfiguration) },
+	"jdk.GCHeapConfiguration":                  func() Event { return new(GCHeapConfiguration) },
+	"jdk.GCSurvivorConfiguration":              func() Event { return new(GCSurvivorConfiguration) },
+	"jdk.GCTLABConfiguration":                  func() Event { return new(GCTLABConfiguration) },
+	"jdk.InitialEnvironmentVariable":           func() Event { return new(InitialEnvironmentVariable) },
+	"jdk.InitialSystemProperty":                func() Event { return new(InitialSystemProperty) },
+	"jdk.IntFlag":                              func() Event { return new(IntFlag) },
+	"jdk.JavaMonitorEnter":                     func() Event { return new(JavaMonitorEnter) },
+	"jdk.JavaMonitorWait":                      func() Event { return new(JavaMonitorWait) },
+	"jdk.JavaThreadStatistics":                 func() Event { return new(JavaThreadStatistics) },
+	"jdk.JVMInformation":                       func() Event { return new(JVMInformation) },
+	"jdk.LoaderConstraintsTableStatistics":     func() Event { return new(LoaderConstraintsTableStatistics) },
+	"jdk.LongFlag":                             func() Event { return new(LongFlag) },
+	"jdk.ModuleExport":                         func() Event { return new(ModuleExport) },
+	"jdk.ModuleRequire":                        func() Event { return new(ModuleRequire) },
+	"jdk.NativeLibrary":                        func() Event { return new(NativeLibrary) },
+	"jdk.NetworkUtilization":                   func() Event { return new(NetworkUtilization) },
+	"jdk.ObjectAllocationInNewTLAB":            func() Event { return new(ObjectAllocationInNewTLAB) },
+	"jdk.ObjectAllocationOutsideTLAB":          func() Event { return new(ObjectAllocationOutsideTLAB) },
+	"jdk.OSInformation":                        func() Event { return new(OSInformation) },
+	"jdk.PhysicalMemory":                       func() Event { return new(PhysicalMemory) },
+	"jdk.PlaceholderTableStatistics":           func() Event { return new(PlaceholderTableStatistics) },
+	"jdk.ProtectionDomainCacheTableStatistics": func() Event { return new(ProtectionDomainCacheTableStatistics) },
+	"jdk.StringFlag":                           func() Event { return new(StringFlag) },
+	"jdk.StringTableStatistics":                func() Event { return new(StringTableStatistics) },
+	"jdk.SymbolTableStatistics":                func() Event { return new(SymbolTableStatistics) },
+	"jdk.SystemProcess":                        func() Event { return new(SystemProcess) },
+	"jdk.ThreadAllocationStatistics":           func() Event { return new(ThreadAllocationStatistics) },
+	"jdk.ThreadCPULoad":                        func() Event { return new(ThreadCPULoad) },
+	"jdk.ThreadContextSwitchRate":              func() Event { return new(ThreadContextSwitchRate) },
+	"jdk.ThreadDump":                           func() Event { return new(ThreadDump) },
+	"jdk.ThreadPark":                           func() Event { return new(ThreadPark) },
+	"jdk.ThreadStart":                          func() Event { return new(ThreadStart) },
+	"jdk.UnsignedIntFlag":                      func() Event { return new(UnsignedIntFlag) },
+	"jdk.UnsignedLongFlag":                     func() Event { return new(UnsignedLongFlag) },
+	"jdk.VirtualizationInformation":            func() Event { return new(VirtualizationInformation) },
+	"jdk.YoungGenerationConfiguration":         func() Event { return new(YoungGenerationConfiguration) },
+}
+
+func indirect(rv reflect.Value, isNil bool) reflect.Value {
+	for {
+		// Load value from interface, but only if the result will be
+		// usefully addressable.
+		if rv.Kind() == reflect.Interface && !rv.IsNil() {
+			e := rv.Elem()
+			if e.Kind() == reflect.Ptr && !e.IsNil() && (!isNil || e.Elem().Kind() == reflect.Ptr) {
+				rv = e
+				continue
+			}
+		}
+
+		if rv.Kind() != reflect.Ptr {
+			break
+		}
+
+		if isNil && rv.CanSet() {
+			return rv
+		}
+
+		if rv.Elem().Kind() == reflect.Interface && rv.Elem().Elem() == rv {
+			return rv.Elem()
+		}
+
+		if rv.IsNil() {
+			rv.Set(reflect.New(rv.Type().Elem()))
+		}
+
+		rv = rv.Elem()
+	}
+
+	return rv
+}
+
+func dereference(v interface{}) reflect.Value {
+	rv := reflect.ValueOf(v)
+
+	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
+
+		if rv.Elem().Kind() == reflect.Interface && rv.Elem().Elem() == rv {
+			return rv.Elem()
+		}
+
+		rv = rv.Elem()
+	}
+
+	return rv
+}
+
+func isNilValue(v interface{}) bool {
+	rv := dereference(v)
+
+	switch rv.Kind() {
+	case reflect.Invalid:
+		return true
+	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func:
+		return rv.IsNil()
+	}
+	return false
+}
+
+type GenericEvent struct {
+	EventBase
+	TypeID     string
+	Attributes map[string]ParseResolvable
+}
+
+func NewGenericEvent(typeID string) *GenericEvent {
+	return &GenericEvent{
+		TypeID:     typeID,
+		Attributes: make(map[string]ParseResolvable),
+	}
+}
+
+func (g *GenericEvent) parseField(name string, p ParseResolvable) (err error) {
+	g.Attributes[name] = p
+	return nil
+}
+
+func (g *GenericEvent) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
+	g.Metadata = class
+	return parseFields(r, classes, cpools, class, nil, true, g.parseField)
+}
+
+func (g *GenericEvent) GetAttr(fieldName string, v interface{}) error {
+	rv := reflect.ValueOf(v)
+
+	if rv.Kind() != reflect.Ptr {
+		return fmt.Errorf("v must be a pointer")
+	}
+	if rv.IsNil() {
+		return fmt.Errorf("v is a nil pointer")
+	}
+
+	attr, ok := g.Attributes[fieldName]
+	if !ok {
+		return fmt.Errorf("field [%s] not exists in this event", fieldName)
+	}
+
+	nilValue := isNilValue(attr)
+
+	rv = indirect(rv, nilValue)
+
+	if nilValue {
+		switch rv.Kind() {
+		case reflect.Interface, reflect.Ptr, reflect.Map, reflect.Slice:
+			rv.Set(reflect.Zero(rv.Type()))
+		}
+		return nil
+	}
+
+	switch rv.Kind() {
+	case reflect.Bool:
+		x, err := toBoolean(attr)
+		if err != nil {
+			return fmt.Errorf("unable to resolve boolean: %w", err)
+		}
+		rv.SetBool(x)
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		var x int64
+		switch v := attr.(type) {
+		case *Byte:
+			x = int64(*v)
+		case *Short:
+			x = int64(*v)
+		case *Int:
+			x = int64(*v)
+		case *Long:
+			x = int64(*v)
+		default:
+			return fmt.Errorf("unable to assign %T to number", attr)
+		}
+
+		if rv.OverflowInt(x) {
+			return fmt.Errorf("unable to assign value to %s: number overflow", rv.Type().Name())
+		}
+		rv.SetInt(x)
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		var x int64
+		switch v := attr.(type) {
+		case *Byte:
+			x = int64(*v)
+		case *Short:
+			x = int64(*v)
+		case *Int:
+			x = int64(*v)
+		case *Long:
+			x = int64(*v)
+		default:
+			return fmt.Errorf("unable to assign %T to number", attr)
+		}
+		if x < 0 {
+			return fmt.Errorf("unable to assign negative number to unsigned number")
+		}
+		if rv.OverflowUint(uint64(x)) {
+			return fmt.Errorf("unable to assign value to %s: number overflow", rv.Type().Name())
+		}
+		rv.SetUint(uint64(x))
+
+	case reflect.Float32, reflect.Float64:
+		var f64 float64
+		switch v := attr.(type) {
+		case *Float:
+			f64 = float64(*v)
+		case *Double:
+			f64 = float64(*v)
+		default:
+			return fmt.Errorf("unable to assign %T to float", attr)
+		}
+		if rv.OverflowFloat(f64) {
+			return fmt.Errorf("unable to assign value to %s: number overflow", rv.Type().Name())
+		}
+		rv.SetFloat(f64)
+
+	case reflect.String:
+		x, err := toString(attr)
+		if err != nil {
+			return fmt.Errorf("unable to resolve string: %w", err)
+		}
+		rv.SetString(x)
+	case reflect.Struct, reflect.Interface:
+		attrValue := dereference(attr)
+		if !attrValue.Type().AssignableTo(rv.Type()) {
+			return fmt.Errorf("unable to assign value of type %s to type %s", attrValue.Type().Name(), rv.Type().Name())
+		}
+		rv.Set(attrValue)
+	}
+
+	return nil
 }
 
 type EventBase struct {
@@ -73,7 +267,7 @@ func (e *EventBase) GetMetadata() *ClassMetadata {
 	return e.Metadata
 }
 
-func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (EventParseable, error) {
+func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (Event, error) {
 	kind, err := r.VarLong()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve event type: %w", err)
@@ -84,7 +278,7 @@ func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (EventParseable, err
 	return parseEvent(r, classes, cpools, int(kind))
 }
 
-func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (EventParseable, error) {
+func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (Event, error) {
 	class, ok := classes[classID]
 	if !ok {
 		return nil, fmt.Errorf("unknown class %d", classID)
@@ -92,12 +286,14 @@ func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (EventP
 	if class.SuperType != EventSuperType {
 		return nil, nil
 	}
-	var v EventParseable
-	if typeFn, ok := events[class.Name]; ok {
-		v = typeFn()
-	} else {
-		v = new(UnsupportedEvent)
-	}
+	var v Event
+	//if _, ok := events[class.Name]; ok {
+	//	//v = typeFn()
+	//	v = NewGenericEvent(class.Name)
+	//} else {
+	//	v = new(UnsupportedEvent)
+	//}
+	v = NewGenericEvent(class.Name)
 	v.SetMetadata(class)
 	if err := v.Parse(r, classes, cpools, class); err != nil {
 		return nil, fmt.Errorf("unable to parse event %s: %w", class.Name, err)

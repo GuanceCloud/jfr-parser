@@ -1,6 +1,6 @@
 github.com/pierrec/lz4/v4 v4.1.17 h1:kV4Ip+/hUBC+8T6+2EgburRtkE9ef4nbY3f4dFhGjMc=
 github.com/pierrec/lz4/v4 v4.1.17/go.mod h1:gZWDp/Ze/IJXGXf23ltt2EXimqmTUXEy0GFuRQyBid4=
-github.com/zhyee/zipiterator v0.0.0-20230131074456-7991053d4e4c h1:tO5MoCOjEBeBjiGbbosD0enqbQbUs8dS68GdofMFwyk=
-github.com/zhyee/zipiterator v0.0.0-20230131074456-7991053d4e4c/go.mod h1:1gGf1dwggKFcrzlBJ/Dzp7hFDP1WZtfY/zxFKLezjyE=
-github.com/zhyee/zipiterator v0.0.0-20230131124849-a7a0412cef9c h1:OQy7KkRnFCe/az7J4ZMTwivclG1jyjnWw+hpCQ6qDDs=
-github.com/zhyee/zipiterator v0.0.0-20230131124849-a7a0412cef9c/go.mod h1:1gGf1dwggKFcrzlBJ/Dzp7hFDP1WZtfY/zxFKLezjyE=
+github.com/pierrec/lz4/v4 v4.1.21 h1:yOVMLb6qSIDP67pl/5F7RepeKYu/VmTyEXvuMI5d9mQ=
+github.com/pierrec/lz4/v4 v4.1.21/go.mod h1:gZWDp/Ze/IJXGXf23ltt2EXimqmTUXEy0GFuRQyBid4=
+github.com/zhyee/zipstream v0.0.0-20230625125559-133d8d1afaa0 h1:BcjUUYzMORs7sJtOCWLXaelG7woHMN1QEs4yCB1QZ48=
+github.com/zhyee/zipstream v0.0.0-20230625125559-133d8d1afaa0/go.mod h1:aaGtAo3dTqYtHjcliPNlyXMIIodvGm8y6uK2KMTYHrk=

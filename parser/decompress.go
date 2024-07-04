@@ -5,10 +5,9 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io"
-
 	"github.com/pierrec/lz4/v4"
-	"github.com/zhyee/zipiterator"
+	"github.com/zhyee/zipstream"
+	"io"
 )
 
 type CompressionType uint8
@@ -51,7 +50,7 @@ func GuessCompressionType(magic []byte) CompressionType {
 	return Unknown
 }
 
-func Uncompress(r io.Reader) (io.ReadCloser, error) {
+func Decompress(r io.Reader) (io.ReadCloser, error) {
 	buf := make([]byte, 4)
 	n, err := io.ReadFull(r, buf)
 	if n == 0 && err != nil {
@@ -66,7 +65,7 @@ func Uncompress(r io.Reader) (io.ReadCloser, error) {
 	case GZip:
 		return gzip.NewReader(r)
 	case ZIP:
-		zr := zipiterator.NewReader(r)
+		zr := zipstream.NewReader(r)
 		for {
 			entry, err := zr.GetNextEntry()
 			if err != nil {

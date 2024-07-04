@@ -1,8 +1,8 @@
 module github.com/GuanceCloud/jfr-parser
 
-go 1.16
+go 1.20
 
 require (
-	github.com/pierrec/lz4/v4 v4.1.17 // indirect
-	github.com/zhyee/zipiterator v0.0.0-20230131124849-a7a0412cef9c // indirect
+	github.com/pierrec/lz4/v4 v4.1.21
+	github.com/zhyee/zipstream v0.0.0-20230625125559-133d8d1afaa0
 )

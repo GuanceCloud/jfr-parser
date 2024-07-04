@@ -35,7 +35,7 @@ func TestUncompress(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r, err := Uncompress(bytes.NewReader(tc.file))
+			r, err := Decompress(bytes.NewReader(tc.file))
 			if err != nil {
 				t.Fatalf("unable to uncompress file: %s", err)
 			}
