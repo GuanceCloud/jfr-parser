@@ -124,26 +124,26 @@ func isNilValue(v interface{}) bool {
 }
 
 type GenericEvent struct {
-	EventBase
-	TypeID     string
-	Attributes map[string]ParseResolvable
+	ClassID       int64
+	ClassMetadata *ClassMetadata
+	Attributes    map[string]ParseResolvable
 }
 
-func NewGenericEvent(typeID string) *GenericEvent {
+func NewGenericEvent(classID int64, classMeta *ClassMetadata) *GenericEvent {
 	return &GenericEvent{
-		TypeID:     typeID,
-		Attributes: make(map[string]ParseResolvable),
+		ClassID:       classID,
+		ClassMetadata: classMeta,
+		Attributes:    make(map[string]ParseResolvable),
 	}
 }
 
-func (g *GenericEvent) parseField(name string, p ParseResolvable) (err error) {
+func (g *GenericEvent) setField(name string, p ParseResolvable) (err error) {
 	g.Attributes[name] = p
 	return nil
 }
 
 func (g *GenericEvent) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	g.Metadata = class
-	return parseFields(r, classes, cpools, class, nil, true, g.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, g.setField)
 }
 
 func (g *GenericEvent) GetAttr(fieldName string, v interface{}) error {
@@ -239,7 +239,7 @@ func (g *GenericEvent) GetAttr(fieldName string, v interface{}) error {
 		rv.SetFloat(f64)
 
 	case reflect.String:
-		x, err := toString(attr)
+		x, err := ToString(attr)
 		if err != nil {
 			return fmt.Errorf("unable to resolve string: %w", err)
 		}
@@ -255,19 +255,7 @@ func (g *GenericEvent) GetAttr(fieldName string, v interface{}) error {
 	return nil
 }
 
-type EventBase struct {
-	Metadata *ClassMetadata
-}
-
-func (e *EventBase) SetMetadata(metadata *ClassMetadata) {
-	e.Metadata = metadata
-}
-
-func (e *EventBase) GetMetadata() *ClassMetadata {
-	return e.Metadata
-}
-
-func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (Event, error) {
+func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (*GenericEvent, error) {
 	kind, err := r.VarLong()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve event type: %w", err)
@@ -275,34 +263,32 @@ func ParseEvent(r Reader, classes ClassMap, cpools PoolMap) (Event, error) {
 	if kind == MetadataEventType || kind == ConstantPoolEventType {
 		return nil, nil
 	}
-	return parseEvent(r, classes, cpools, int(kind))
+	return parseEvent(r, classes, cpools, kind)
 }
 
-func parseEvent(r Reader, classes ClassMap, cpools PoolMap, classID int) (Event, error) {
-	class, ok := classes[classID]
+func parseEvent(r Reader, classMap ClassMap, cpools PoolMap, classID int64) (*GenericEvent, error) {
+	classMeta, ok := classMap[classID]
 	if !ok {
 		return nil, fmt.Errorf("unknown class %d", classID)
 	}
-	if class.SuperType != EventSuperType {
+	if classMeta.SuperType != EventSuperType {
 		return nil, nil
 	}
-	var v Event
+	//var v Event
 	//if _, ok := events[class.Name]; ok {
 	//	//v = typeFn()
 	//	v = NewGenericEvent(class.Name)
 	//} else {
 	//	v = new(UnsupportedEvent)
 	//}
-	v = NewGenericEvent(class.Name)
-	v.SetMetadata(class)
-	if err := v.Parse(r, classes, cpools, class); err != nil {
-		return nil, fmt.Errorf("unable to parse event %s: %w", class.Name, err)
+	v := NewGenericEvent(classID, classMeta)
+	if err := v.Parse(r, classMap, cpools, classMeta); err != nil {
+		return nil, fmt.Errorf("unable to parse event type of %s: %w", classMeta.Name, err)
 	}
 	return v, nil
 }
 
 type ActiveRecording struct {
-	EventBase
 	StartTime         int64
 	Duration          int64
 	EventThread       *Thread
@@ -315,7 +301,7 @@ type ActiveRecording struct {
 	RecordingDuration int64
 }
 
-func (ar *ActiveRecording) parseField(name string, p ParseResolvable) (err error) {
+func (ar *ActiveRecording) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ar.StartTime, err = toLong(p)
@@ -326,9 +312,9 @@ func (ar *ActiveRecording) parseField(name string, p ParseResolvable) (err error
 	case "id":
 		ar.ID, err = toLong(p)
 	case "name":
-		ar.Name, err = toString(p)
+		ar.Name, err = ToString(p)
 	case "destination":
-		ar.Destination, err = toString(p)
+		ar.Destination, err = ToString(p)
 	case "maxAge":
 		ar.MaxAge, err = toLong(p)
 	case "maxSize":
@@ -342,11 +328,10 @@ func (ar *ActiveRecording) parseField(name string, p ParseResolvable) (err error
 }
 
 func (ar *ActiveRecording) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ar.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ar.setField)
 }
 
 type ActiveSetting struct {
-	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -355,7 +340,7 @@ type ActiveSetting struct {
 	Value       string
 }
 
-func (as *ActiveSetting) parseField(name string, p ParseResolvable) (err error) {
+func (as *ActiveSetting) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		as.StartTime, err = toLong(p)
@@ -366,31 +351,30 @@ func (as *ActiveSetting) parseField(name string, p ParseResolvable) (err error) 
 	case "id":
 		as.ID, err = toLong(p)
 	case "name":
-		as.Name, err = toString(p)
+		as.Name, err = ToString(p)
 	case "value":
-		as.Value, err = toString(p)
+		as.Value, err = ToString(p)
 	}
 	return err
 }
 
 func (as *ActiveSetting) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, as.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, as.setField)
 }
 
 type BooleanFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     bool
 	Origin    *FlagValueOrigin
 }
 
-func (bf *BooleanFlag) parseField(name string, p ParseResolvable) (err error) {
+func (bf *BooleanFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		bf.StartTime, err = toLong(p)
 	case "name":
-		bf.Name, err = toString(p)
+		bf.Name, err = ToString(p)
 	case "value":
 		bf.Value, err = toBoolean(p)
 	case "origin":
@@ -400,11 +384,10 @@ func (bf *BooleanFlag) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (bf *BooleanFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, bf.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, bf.setField)
 }
 
 type CPUInformation struct {
-	EventBase
 	StartTime   int64
 	CPU         string
 	Description string
@@ -413,14 +396,14 @@ type CPUInformation struct {
 	HWThreads   int32
 }
 
-func (ci *CPUInformation) parseField(name string, p ParseResolvable) (err error) {
+func (ci *CPUInformation) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ci.StartTime, err = toLong(p)
 	case "duration":
-		ci.CPU, err = toString(p)
+		ci.CPU, err = ToString(p)
 	case "eventThread":
-		ci.Description, err = toString(p)
+		ci.Description, err = ToString(p)
 	case "sockets":
 		ci.Sockets, err = toInt(p)
 	case "cores":
@@ -432,18 +415,17 @@ func (ci *CPUInformation) parseField(name string, p ParseResolvable) (err error)
 }
 
 func (ci *CPUInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ci.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ci.setField)
 }
 
 type CPULoad struct {
-	EventBase
 	StartTime    int64
 	JVMUser      float32
 	JVMSystem    float32
 	MachineTotal float32
 }
 
-func (cl *CPULoad) parseField(name string, p ParseResolvable) (err error) {
+func (cl *CPULoad) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		cl.StartTime, err = toLong(p)
@@ -458,11 +440,10 @@ func (cl *CPULoad) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (cl *CPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, cl.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, cl.setField)
 }
 
 type CPUTimeStampCounter struct {
-	EventBase
 	StartTime           int64
 	FastTimeEnabled     bool
 	FastTimeAutoEnabled bool
@@ -470,7 +451,7 @@ type CPUTimeStampCounter struct {
 	FastTimeFrequency   int64
 }
 
-func (ctsc *CPUTimeStampCounter) parseField(name string, p ParseResolvable) (err error) {
+func (ctsc *CPUTimeStampCounter) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ctsc.StartTime, err = toLong(p)
@@ -487,11 +468,10 @@ func (ctsc *CPUTimeStampCounter) parseField(name string, p ParseResolvable) (err
 }
 
 func (ctsc *CPUTimeStampCounter) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ctsc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ctsc.setField)
 }
 
 type ClassLoaderStatistics struct {
-	EventBase
 	StartTime                 int64
 	ClassLoader               *ClassLoader
 	ParentClassLoader         *ClassLoader
@@ -510,7 +490,7 @@ type ClassLoaderStatistics struct {
 	HiddenBlockSize           int64
 }
 
-func (cls *ClassLoaderStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (cls *ClassLoaderStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		cls.StartTime, err = toLong(p)
@@ -549,17 +529,16 @@ func (cls *ClassLoaderStatistics) parseField(name string, p ParseResolvable) (er
 }
 
 func (cls *ClassLoaderStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, cls.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, cls.setField)
 }
 
 type ClassLoadingStatistics struct {
-	EventBase
 	StartTime          int64
 	LoadedClassCount   int64
 	UnloadedClassCount int64
 }
 
-func (cls *ClassLoadingStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (cls *ClassLoadingStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		cls.StartTime, err = toLong(p)
@@ -572,11 +551,10 @@ func (cls *ClassLoadingStatistics) parseField(name string, p ParseResolvable) (e
 }
 
 func (cls *ClassLoadingStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, cls.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, cls.setField)
 }
 
 type CodeCacheConfiguration struct {
-	EventBase
 	StartTime          int64
 	InitialSize        int64
 	ReservedSize       int64
@@ -589,7 +567,7 @@ type CodeCacheConfiguration struct {
 	ReservedTopAddress int64
 }
 
-func (ccc *CodeCacheConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (ccc *CodeCacheConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ccc.StartTime, err = toLong(p)
@@ -616,11 +594,10 @@ func (ccc *CodeCacheConfiguration) parseField(name string, p ParseResolvable) (e
 }
 
 func (ccc *CodeCacheConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ccc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ccc.setField)
 }
 
 type CodeCacheStatistics struct {
-	EventBase
 	StartTime           int64
 	CodeBlobType        *CodeBlobType
 	StartAddress        int64
@@ -632,7 +609,7 @@ type CodeCacheStatistics struct {
 	FullCount           int32
 }
 
-func (ccs *CodeCacheStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (ccs *CodeCacheStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ccs.StartTime, err = toLong(p)
@@ -657,18 +634,17 @@ func (ccs *CodeCacheStatistics) parseField(name string, p ParseResolvable) (err 
 }
 
 func (ccs *CodeCacheStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ccs.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ccs.setField)
 }
 
 type CodeSweeperConfiguration struct {
-	EventBase
 	StartTime       int64
 	SweeperEnabled  bool
 	FlushingEnabled bool
 	SweepThreshold  int64
 }
 
-func (csc *CodeSweeperConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (csc *CodeSweeperConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		csc.StartTime, err = toLong(p)
@@ -683,11 +659,10 @@ func (csc *CodeSweeperConfiguration) parseField(name string, p ParseResolvable) 
 }
 
 func (csc *CodeSweeperConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, csc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, csc.setField)
 }
 
 type CodeSweeperStatistics struct {
-	EventBase
 	StartTime            int64
 	SweepCount           int32
 	MethodReclaimedCount int32
@@ -696,7 +671,7 @@ type CodeSweeperStatistics struct {
 	PeakSweepTime        int64
 }
 
-func (css *CodeSweeperStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (css *CodeSweeperStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		css.StartTime, err = toLong(p)
@@ -715,17 +690,16 @@ func (css *CodeSweeperStatistics) parseField(name string, p ParseResolvable) (er
 }
 
 func (css *CodeSweeperStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, css.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, css.setField)
 }
 
 type CompilerConfiguration struct {
-	EventBase
 	StartTime         int64
 	ThreadCount       int32
 	TieredCompilation bool
 }
 
-func (cc *CompilerConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (cc *CompilerConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		cc.StartTime, err = toLong(p)
@@ -738,11 +712,10 @@ func (cc *CompilerConfiguration) parseField(name string, p ParseResolvable) (err
 }
 
 func (cc *CompilerConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, cc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, cc.setField)
 }
 
 type CompilerStatistics struct {
-	EventBase
 	StartTime             int64
 	CompileCount          int32
 	BailoutCount          int32
@@ -757,7 +730,7 @@ type CompilerStatistics struct {
 	TotalTimeSpent        int64
 }
 
-func (cs *CompilerStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (cs *CompilerStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		cs.StartTime, err = toLong(p)
@@ -788,23 +761,22 @@ func (cs *CompilerStatistics) parseField(name string, p ParseResolvable) (err er
 }
 
 func (cs *CompilerStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, cs.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, cs.setField)
 }
 
 type DoubleFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     float64
 	Origin    *FlagValueOrigin
 }
 
-func (df *DoubleFlag) parseField(name string, p ParseResolvable) (err error) {
+func (df *DoubleFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		df.StartTime, err = toLong(p)
 	case "name":
-		df.Name, err = toString(p)
+		df.Name, err = ToString(p)
 	case "value":
 		df.Value, err = toDouble(p)
 	case "origin":
@@ -814,11 +786,10 @@ func (df *DoubleFlag) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (df *DoubleFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, df.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, df.setField)
 }
 
 type ExceptionStatistics struct {
-	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -826,7 +797,7 @@ type ExceptionStatistics struct {
 	Throwable   int64
 }
 
-func (es *ExceptionStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (es *ExceptionStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		es.StartTime, err = toLong(p)
@@ -843,11 +814,10 @@ func (es *ExceptionStatistics) parseField(name string, p ParseResolvable) (err e
 }
 
 func (es *ExceptionStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, es.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, es.setField)
 }
 
 type ExecutionSample struct {
-	EventBase
 	StartTime     int64
 	SampledThread *Thread
 	StackTrace    *StackTrace
@@ -855,7 +825,7 @@ type ExecutionSample struct {
 	ContextId     int64
 }
 
-func (es *ExecutionSample) parseField(name string, p ParseResolvable) (err error) {
+func (es *ExecutionSample) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		es.StartTime, err = toLong(p)
@@ -872,11 +842,10 @@ func (es *ExecutionSample) parseField(name string, p ParseResolvable) (err error
 }
 
 func (es *ExecutionSample) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, es.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, es.setField)
 }
 
 type GCConfiguration struct {
-	EventBase
 	StartTime              int64
 	YoungCollector         *GCName
 	OldCollector           *GCName
@@ -889,7 +858,7 @@ type GCConfiguration struct {
 	GCTimeRatio            int32
 }
 
-func (gc *GCConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (gc *GCConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		gc.StartTime, err = toLong(p)
@@ -916,11 +885,10 @@ func (gc *GCConfiguration) parseField(name string, p ParseResolvable) (err error
 }
 
 func (gc *GCConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, gc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, gc.setField)
 }
 
 type GCHeapConfiguration struct {
-	EventBase
 	StartTime          int64
 	MinSize            int64
 	MaxSize            int64
@@ -931,7 +899,7 @@ type GCHeapConfiguration struct {
 	HeapAddressBits    int8
 }
 
-func (ghc *GCHeapConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (ghc *GCHeapConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ghc.StartTime, err = toLong(p)
@@ -954,17 +922,16 @@ func (ghc *GCHeapConfiguration) parseField(name string, p ParseResolvable) (err 
 }
 
 func (ghc *GCHeapConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ghc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ghc.setField)
 }
 
 type GCSurvivorConfiguration struct {
-	EventBase
 	StartTime                int64
 	MaxTenuringThreshold     int8
 	InitialTenuringThreshold int8
 }
 
-func (gcs *GCSurvivorConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (gcs *GCSurvivorConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		gcs.StartTime, err = toLong(p)
@@ -977,18 +944,17 @@ func (gcs *GCSurvivorConfiguration) parseField(name string, p ParseResolvable) (
 }
 
 func (gsc *GCSurvivorConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, gsc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, gsc.setField)
 }
 
 type GCTLABConfiguration struct {
-	EventBase
 	StartTime            int64
 	UsesTLABs            bool
 	MinTLABSize          int64
 	TLABRefillWasteLimit int64
 }
 
-func (gtc *GCTLABConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (gtc *GCTLABConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		gtc.StartTime, err = toLong(p)
@@ -1003,69 +969,66 @@ func (gtc *GCTLABConfiguration) parseField(name string, p ParseResolvable) (err 
 }
 
 func (gtc *GCTLABConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, gtc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, gtc.setField)
 }
 
 type InitialEnvironmentVariable struct {
-	EventBase
 	StartTime int64
 	Key       string
 	Value     string
 }
 
-func (iev *InitialEnvironmentVariable) parseField(name string, p ParseResolvable) (err error) {
+func (iev *InitialEnvironmentVariable) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		iev.StartTime, err = toLong(p)
 	case "key":
-		iev.Key, err = toString(p)
+		iev.Key, err = ToString(p)
 	case "value":
-		iev.Value, err = toString(p)
+		iev.Value, err = ToString(p)
 	}
 	return err
 }
 
 func (iev *InitialEnvironmentVariable) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, iev.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, iev.setField)
 }
 
 type InitialSystemProperty struct {
-	EventBase
 	StartTime int64
 	Key       string
 	Value     string
 }
 
-func (isp *InitialSystemProperty) parseField(name string, p ParseResolvable) (err error) {
+func (isp *InitialSystemProperty) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		isp.StartTime, err = toLong(p)
 	case "key":
-		isp.Key, err = toString(p)
+		isp.Key, err = ToString(p)
 	case "value":
-		isp.Value, err = toString(p)
+		isp.Value, err = ToString(p)
 	}
 	return err
 }
 
 func (isp *InitialSystemProperty) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, isp.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, isp.setField)
 }
 
 type IntFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     int32
 	Origin    *FlagValueOrigin
 }
 
-func (f *IntFlag) parseField(name string, p ParseResolvable) (err error) {
+func (f *IntFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		f.StartTime, err = toLong(p)
 	case "name":
-		f.Name, err = toString(p)
+		f.Name, err = ToString(p)
 	case "value":
 		f.Value, err = toInt(p)
 	case "origin":
@@ -1075,11 +1038,10 @@ func (f *IntFlag) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (f *IntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, f.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, f.setField)
 }
 
 type JavaMonitorEnter struct {
-	EventBase
 	StartTime     int64
 	Duration      int64
 	EventThread   *Thread
@@ -1090,7 +1052,7 @@ type JavaMonitorEnter struct {
 	ContextId     int64
 }
 
-func (jme *JavaMonitorEnter) parseField(name string, p ParseResolvable) (err error) {
+func (jme *JavaMonitorEnter) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		jme.StartTime, err = toLong(p)
@@ -1113,11 +1075,10 @@ func (jme *JavaMonitorEnter) parseField(name string, p ParseResolvable) (err err
 }
 
 func (jme *JavaMonitorEnter) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, jme.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, jme.setField)
 }
 
 type JavaMonitorWait struct {
-	EventBase
 	StartTime    int64
 	Duration     int64
 	EventThread  *Thread
@@ -1129,7 +1090,7 @@ type JavaMonitorWait struct {
 	Address      int64
 }
 
-func (jmw *JavaMonitorWait) parseField(name string, p ParseResolvable) (err error) {
+func (jmw *JavaMonitorWait) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		jmw.StartTime, err = toLong(p)
@@ -1154,11 +1115,10 @@ func (jmw *JavaMonitorWait) parseField(name string, p ParseResolvable) (err erro
 }
 
 func (jmw *JavaMonitorWait) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, jmw.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, jmw.setField)
 }
 
 type JavaThreadStatistics struct {
-	EventBase
 	StartTime        int64
 	ActiveCount      int64
 	DaemonCount      int64
@@ -1166,7 +1126,7 @@ type JavaThreadStatistics struct {
 	PeakCount        int64
 }
 
-func (jts *JavaThreadStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (jts *JavaThreadStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		jts.StartTime, err = toLong(p)
@@ -1183,11 +1143,10 @@ func (jts *JavaThreadStatistics) parseField(name string, p ParseResolvable) (err
 }
 
 func (jts *JavaThreadStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, jts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, jts.setField)
 }
 
 type JVMInformation struct {
-	EventBase
 	StartTime     int64
 	JVMName       string
 	JVMVersion    string
@@ -1198,20 +1157,20 @@ type JVMInformation struct {
 	PID           int64
 }
 
-func (ji *JVMInformation) parseField(name string, p ParseResolvable) (err error) {
+func (ji *JVMInformation) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ji.StartTime, err = toLong(p)
 	case "jvmName":
-		ji.JVMName, err = toString(p)
+		ji.JVMName, err = ToString(p)
 	case "jvmVersion":
-		ji.JVMVersion, err = toString(p)
+		ji.JVMVersion, err = ToString(p)
 	case "jvmArguments":
-		ji.JVMArguments, err = toString(p)
+		ji.JVMArguments, err = ToString(p)
 	case "jvmFlags":
-		ji.JVMFlags, err = toString(p)
+		ji.JVMFlags, err = ToString(p)
 	case "javaArguments":
-		ji.JavaArguments, err = toString(p)
+		ji.JavaArguments, err = ToString(p)
 	case "jvmStartTime":
 		ji.JVMStartTime, err = toLong(p)
 	case "pid":
@@ -1221,11 +1180,10 @@ func (ji *JVMInformation) parseField(name string, p ParseResolvable) (err error)
 }
 
 func (ji *JVMInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ji.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ji.setField)
 }
 
 type LoaderConstraintsTableStatistics struct {
-	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1238,7 +1196,7 @@ type LoaderConstraintsTableStatistics struct {
 	RemovalRate                  float32
 }
 
-func (lcts *LoaderConstraintsTableStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (lcts *LoaderConstraintsTableStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		lcts.StartTime, err = toLong(p)
@@ -1265,23 +1223,22 @@ func (lcts *LoaderConstraintsTableStatistics) parseField(name string, p ParseRes
 }
 
 func (lcts *LoaderConstraintsTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, lcts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, lcts.setField)
 }
 
 type LongFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     int64
 	Origin    *FlagValueOrigin
 }
 
-func (lf *LongFlag) parseField(name string, p ParseResolvable) (err error) {
+func (lf *LongFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		lf.StartTime, err = toLong(p)
 	case "name":
-		lf.Name, err = toString(p)
+		lf.Name, err = ToString(p)
 	case "value":
 		lf.Value, err = toLong(p)
 	case "origin":
@@ -1291,17 +1248,16 @@ func (lf *LongFlag) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (lf *LongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, lf.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, lf.setField)
 }
 
 type ModuleExport struct {
-	EventBase
 	StartTime       int64
 	ExportedPackage *Package
 	TargetModule    *Module
 }
 
-func (me *ModuleExport) parseField(name string, p ParseResolvable) (err error) {
+func (me *ModuleExport) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		me.StartTime, err = toLong(p)
@@ -1314,17 +1270,16 @@ func (me *ModuleExport) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (me *ModuleExport) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, me.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, me.setField)
 }
 
 type ModuleRequire struct {
-	EventBase
 	StartTime      int64
 	Source         *Module
 	RequiredModule *Module
 }
 
-func (mr *ModuleRequire) parseField(name string, p ParseResolvable) (err error) {
+func (mr *ModuleRequire) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		mr.StartTime, err = toLong(p)
@@ -1337,23 +1292,22 @@ func (mr *ModuleRequire) parseField(name string, p ParseResolvable) (err error) 
 }
 
 func (mr *ModuleRequire) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, mr.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, mr.setField)
 }
 
 type NativeLibrary struct {
-	EventBase
 	StartTime   int64
 	Name        string
 	BaseAddress int64
 	TopAddress  int64
 }
 
-func (nl *NativeLibrary) parseField(name string, p ParseResolvable) (err error) {
+func (nl *NativeLibrary) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		nl.StartTime, err = toLong(p)
 	case "name":
-		nl.Name, err = toString(p)
+		nl.Name, err = ToString(p)
 	case "baseAddress":
 		nl.BaseAddress, err = toLong(p)
 	case "topAddress":
@@ -1363,18 +1317,17 @@ func (nl *NativeLibrary) parseField(name string, p ParseResolvable) (err error) 
 }
 
 func (nl *NativeLibrary) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, nl.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, nl.setField)
 }
 
 type NetworkUtilization struct {
-	EventBase
 	StartTime        int64
 	NetworkInterface *NetworkInterfaceName
 	ReadRate         int64
 	WriteRate        int64
 }
 
-func (nu *NetworkUtilization) parseField(name string, p ParseResolvable) (err error) {
+func (nu *NetworkUtilization) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		nu.StartTime, err = toLong(p)
@@ -1389,11 +1342,10 @@ func (nu *NetworkUtilization) parseField(name string, p ParseResolvable) (err er
 }
 
 func (nu *NetworkUtilization) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, nu.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, nu.setField)
 }
 
 type ObjectAllocationInNewTLAB struct {
-	EventBase
 	StartTime      int64
 	EventThread    *Thread
 	StackTrace     *StackTrace
@@ -1403,7 +1355,7 @@ type ObjectAllocationInNewTLAB struct {
 	ContextId      int64
 }
 
-func (oa *ObjectAllocationInNewTLAB) parseField(name string, p ParseResolvable) (err error) {
+func (oa *ObjectAllocationInNewTLAB) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		oa.StartTime, err = toLong(p)
@@ -1425,11 +1377,10 @@ func (oa *ObjectAllocationInNewTLAB) parseField(name string, p ParseResolvable) 
 }
 
 func (oa *ObjectAllocationInNewTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, oa.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, oa.setField)
 }
 
 type ObjectAllocationOutsideTLAB struct {
-	EventBase
 	StartTime      int64
 	EventThread    *Thread
 	StackTrace     *StackTrace
@@ -1438,7 +1389,7 @@ type ObjectAllocationOutsideTLAB struct {
 	ContextId      int64
 }
 
-func (oa *ObjectAllocationOutsideTLAB) parseField(name string, p ParseResolvable) (err error) {
+func (oa *ObjectAllocationOutsideTLAB) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		oa.StartTime, err = toLong(p)
@@ -1457,37 +1408,35 @@ func (oa *ObjectAllocationOutsideTLAB) parseField(name string, p ParseResolvable
 }
 
 func (oa *ObjectAllocationOutsideTLAB) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, oa.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, oa.setField)
 }
 
 type OSInformation struct {
-	EventBase
 	StartTime int64
 	OSVersion string
 }
 
-func (os *OSInformation) parseField(name string, p ParseResolvable) (err error) {
+func (os *OSInformation) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		os.StartTime, err = toLong(p)
 	case "osVersion":
-		os.OSVersion, err = toString(p)
+		os.OSVersion, err = ToString(p)
 	}
 	return err
 }
 
 func (os *OSInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, os.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, os.setField)
 }
 
 type PhysicalMemory struct {
-	EventBase
 	StartTime int64
 	TotalSize int64
 	UsedSize  int64
 }
 
-func (pm *PhysicalMemory) parseField(name string, p ParseResolvable) (err error) {
+func (pm *PhysicalMemory) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		pm.StartTime, err = toLong(p)
@@ -1500,11 +1449,10 @@ func (pm *PhysicalMemory) parseField(name string, p ParseResolvable) (err error)
 }
 
 func (pm *PhysicalMemory) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, pm.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, pm.setField)
 }
 
 type PlaceholderTableStatistics struct {
-	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1517,7 +1465,7 @@ type PlaceholderTableStatistics struct {
 	RemovalRate                  float32
 }
 
-func (pts *PlaceholderTableStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (pts *PlaceholderTableStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		pts.StartTime, err = toLong(p)
@@ -1544,11 +1492,10 @@ func (pts *PlaceholderTableStatistics) parseField(name string, p ParseResolvable
 }
 
 func (pts *PlaceholderTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, pts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, pts.setField)
 }
 
 type ProtectionDomainCacheTableStatistics struct {
-	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1561,7 +1508,7 @@ type ProtectionDomainCacheTableStatistics struct {
 	RemovalRate                  float32
 }
 
-func (pdcts *ProtectionDomainCacheTableStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (pdcts *ProtectionDomainCacheTableStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		pdcts.StartTime, err = toLong(p)
@@ -1588,25 +1535,24 @@ func (pdcts *ProtectionDomainCacheTableStatistics) parseField(name string, p Par
 }
 
 func (pdcts *ProtectionDomainCacheTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, pdcts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, pdcts.setField)
 }
 
 type StringFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     string
 	Origin    *FlagValueOrigin
 }
 
-func (sf *StringFlag) parseField(name string, p ParseResolvable) (err error) {
+func (sf *StringFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		sf.StartTime, err = toLong(p)
 	case "name":
-		sf.Name, err = toString(p)
+		sf.Name, err = ToString(p)
 	case "value":
-		sf.Value, err = toString(p)
+		sf.Value, err = ToString(p)
 	case "origin":
 		sf.Origin, err = toFlagValueOrigin(p)
 	}
@@ -1614,11 +1560,10 @@ func (sf *StringFlag) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (sf *StringFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, sf.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, sf.setField)
 }
 
 type StringTableStatistics struct {
-	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1631,7 +1576,7 @@ type StringTableStatistics struct {
 	RemovalRate                  float32
 }
 
-func (sts *StringTableStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (sts *StringTableStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		sts.StartTime, err = toLong(p)
@@ -1658,11 +1603,10 @@ func (sts *StringTableStatistics) parseField(name string, p ParseResolvable) (er
 }
 
 func (sts *StringTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, sts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, sts.setField)
 }
 
 type SymbolTableStatistics struct {
-	EventBase
 	StartTime                    int64
 	BucketCount                  int64
 	EntryCount                   int64
@@ -1675,7 +1619,7 @@ type SymbolTableStatistics struct {
 	RemovalRate                  float32
 }
 
-func (sts *SymbolTableStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (sts *SymbolTableStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		sts.StartTime, err = toLong(p)
@@ -1702,40 +1646,38 @@ func (sts *SymbolTableStatistics) parseField(name string, p ParseResolvable) (er
 }
 
 func (sts *SymbolTableStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, sts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, sts.setField)
 }
 
 type SystemProcess struct {
-	EventBase
 	StartTime   int64
 	PID         string
 	CommandLine string
 }
 
-func (sp *SystemProcess) parseField(name string, p ParseResolvable) (err error) {
+func (sp *SystemProcess) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		sp.StartTime, err = toLong(p)
 	case "pid":
-		sp.PID, err = toString(p)
+		sp.PID, err = ToString(p)
 	case "commandLine":
-		sp.CommandLine, err = toString(p)
+		sp.CommandLine, err = ToString(p)
 	}
 	return err
 }
 
 func (sp *SystemProcess) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, sp.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, sp.setField)
 }
 
 type ThreadAllocationStatistics struct {
-	EventBase
 	StartTime int64
 	Allocated int64
 	Thread    *Thread
 }
 
-func (tas *ThreadAllocationStatistics) parseField(name string, p ParseResolvable) (err error) {
+func (tas *ThreadAllocationStatistics) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		tas.StartTime, err = toLong(p)
@@ -1748,18 +1690,17 @@ func (tas *ThreadAllocationStatistics) parseField(name string, p ParseResolvable
 }
 
 func (tas *ThreadAllocationStatistics) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, tas.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, tas.setField)
 }
 
 type ThreadCPULoad struct {
-	EventBase
 	StartTime   int64
 	EventThread *Thread
 	User        float32
 	System      float32
 }
 
-func (tcl *ThreadCPULoad) parseField(name string, p ParseResolvable) (err error) {
+func (tcl *ThreadCPULoad) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		tcl.StartTime, err = toLong(p)
@@ -1774,16 +1715,15 @@ func (tcl *ThreadCPULoad) parseField(name string, p ParseResolvable) (err error)
 }
 
 func (tcl *ThreadCPULoad) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, tcl.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, tcl.setField)
 }
 
 type ThreadContextSwitchRate struct {
-	EventBase
 	StartTime  int64
 	SwitchRate float32
 }
 
-func (tcsr *ThreadContextSwitchRate) parseField(name string, p ParseResolvable) (err error) {
+func (tcsr *ThreadContextSwitchRate) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		tcsr.StartTime, err = toLong(p)
@@ -1794,31 +1734,29 @@ func (tcsr *ThreadContextSwitchRate) parseField(name string, p ParseResolvable) 
 }
 
 func (tcsr *ThreadContextSwitchRate) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, tcsr.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, tcsr.setField)
 }
 
 type ThreadDump struct {
-	EventBase
 	StartTime int64
 	Result    string
 }
 
-func (td *ThreadDump) parseField(name string, p ParseResolvable) (err error) {
+func (td *ThreadDump) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		td.StartTime, err = toLong(p)
 	case "result":
-		td.Result, err = toString(p)
+		td.Result, err = ToString(p)
 	}
 	return err
 }
 
 func (td *ThreadDump) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, td.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, td.setField)
 }
 
 type ThreadPark struct {
-	EventBase
 	StartTime   int64
 	Duration    int64
 	EventThread *Thread
@@ -1830,7 +1768,7 @@ type ThreadPark struct {
 	ContextId   int64
 }
 
-func (tp *ThreadPark) parseField(name string, p ParseResolvable) (err error) {
+func (tp *ThreadPark) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		tp.StartTime, err = toLong(p)
@@ -1855,11 +1793,10 @@ func (tp *ThreadPark) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (tp *ThreadPark) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, tp.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, tp.setField)
 }
 
 type ThreadStart struct {
-	EventBase
 	StartTime    int64
 	EventThread  *Thread
 	StackTrace   *StackTrace
@@ -1867,7 +1804,7 @@ type ThreadStart struct {
 	ParentThread *Thread
 }
 
-func (ts *ThreadStart) parseField(name string, p ParseResolvable) (err error) {
+func (ts *ThreadStart) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ts.StartTime, err = toLong(p)
@@ -1884,23 +1821,22 @@ func (ts *ThreadStart) parseField(name string, p ParseResolvable) (err error) {
 }
 
 func (ts *ThreadStart) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ts.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ts.setField)
 }
 
 type UnsignedIntFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     int32
 	Origin    *FlagValueOrigin
 }
 
-func (uif *UnsignedIntFlag) parseField(name string, p ParseResolvable) (err error) {
+func (uif *UnsignedIntFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		uif.StartTime, err = toLong(p)
 	case "name":
-		uif.Name, err = toString(p)
+		uif.Name, err = ToString(p)
 	case "value":
 		uif.Value, err = toInt(p)
 	case "origin":
@@ -1910,23 +1846,22 @@ func (uif *UnsignedIntFlag) parseField(name string, p ParseResolvable) (err erro
 }
 
 func (uif *UnsignedIntFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, uif.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, uif.setField)
 }
 
 type UnsignedLongFlag struct {
-	EventBase
 	StartTime int64
 	Name      string
 	Value     int64
 	Origin    *FlagValueOrigin
 }
 
-func (ulf *UnsignedLongFlag) parseField(name string, p ParseResolvable) (err error) {
+func (ulf *UnsignedLongFlag) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ulf.StartTime, err = toLong(p)
 	case "name":
-		ulf.Name, err = toString(p)
+		ulf.Name, err = ToString(p)
 	case "value":
 		ulf.Value, err = toLong(p)
 	case "origin":
@@ -1936,38 +1871,36 @@ func (ulf *UnsignedLongFlag) parseField(name string, p ParseResolvable) (err err
 }
 
 func (ulf *UnsignedLongFlag) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ulf.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ulf.setField)
 }
 
 type VirtualizationInformation struct {
-	EventBase
 	StartTime int64
 	Name      string
 }
 
-func (vi *VirtualizationInformation) parseField(name string, p ParseResolvable) (err error) {
+func (vi *VirtualizationInformation) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		vi.StartTime, err = toLong(p)
 	case "name":
-		vi.Name, err = toString(p)
+		vi.Name, err = ToString(p)
 	}
 	return err
 }
 
 func (vi *VirtualizationInformation) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, vi.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, vi.setField)
 }
 
 type YoungGenerationConfiguration struct {
-	EventBase
 	StartTime int64
 	MinSize   int64
 	MaxSize   int64
 	NewRatio  int32
 }
 
-func (ygc *YoungGenerationConfiguration) parseField(name string, p ParseResolvable) (err error) {
+func (ygc *YoungGenerationConfiguration) setField(name string, p ParseResolvable) (err error) {
 	switch name {
 	case "startTime":
 		ygc.StartTime, err = toLong(p)
@@ -1982,17 +1915,16 @@ func (ygc *YoungGenerationConfiguration) parseField(name string, p ParseResolvab
 }
 
 func (ygc *YoungGenerationConfiguration) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ygc.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ygc.setField)
 }
 
 type UnsupportedEvent struct {
-	EventBase
 }
 
-func (ue *UnsupportedEvent) parseField(name string, p ParseResolvable) error {
+func (ue *UnsupportedEvent) setField(name string, p ParseResolvable) error {
 	return nil
 }
 
 func (ue *UnsupportedEvent) Parse(r Reader, classes ClassMap, cpools PoolMap, class *ClassMetadata) error {
-	return parseFields(r, classes, cpools, class, nil, true, ue.parseField)
+	return parseFields(r, classes, cpools, class, nil, true, ue.setField)
 }

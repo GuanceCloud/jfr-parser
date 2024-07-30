@@ -2,6 +2,9 @@ package parser
 
 import (
 	"fmt"
+	"github.com/grafana/jfr-parser/common/units"
+	"github.com/grafana/jfr-parser/internal/utils"
+	"log/slog"
 	"strconv"
 
 	"github.com/grafana/jfr-parser/parser/types/def"
@@ -12,27 +15,12 @@ type Element interface {
 	AppendChild(name string) Element
 }
 
-type AnnotationMetadata struct {
-	Class  int64
-	Values map[string]string
+type ElementWithHeader interface {
+	Element
+	SetHeader(header *Header)
 }
 
-func (a *AnnotationMetadata) SetAttribute(key, value string) (err error) {
-	switch key {
-	case "class":
-		a.Class, err = strconv.ParseInt(value, 10, 64)
-	default:
-		if a.Values == nil {
-			a.Values = make(map[string]string)
-		}
-		a.Values[key] = value
-	}
-	return err
-}
-
-func (a *AnnotationMetadata) AppendChild(string) Element { return nil }
-
-// TODO: Proper attribute support for SettingMetadata
+// SettingMetadata TODO: Proper attribute support for SettingMetadata
 type SettingMetadata struct {
 	Values map[string]string
 }
@@ -48,11 +36,12 @@ func (s *SettingMetadata) SetAttribute(key, value string) error {
 func (s *SettingMetadata) AppendChild(string) Element { return nil }
 
 type FieldMetadata struct {
-	Class        int64
+	ClassID      int64
 	Name         string
 	ConstantPool bool
 	Dimension    int32
-	Annotations  []AnnotationMetadata
+	ChunkHeader  *Header
+	FieldAnnotation
 }
 
 func (f *FieldMetadata) SetAttribute(key, value string) (err error) {
@@ -60,7 +49,7 @@ func (f *FieldMetadata) SetAttribute(key, value string) (err error) {
 	case "name":
 		f.Name = value
 	case "class":
-		f.Class, err = strconv.ParseInt(value, 10, 64)
+		f.ClassID, err = strconv.ParseInt(value, 10, 64)
 	case "constantPool":
 		f.ConstantPool, err = parseBool(value)
 	case "dimension":
@@ -74,20 +63,157 @@ func (f *FieldMetadata) SetAttribute(key, value string) (err error) {
 func (f *FieldMetadata) AppendChild(name string) Element {
 	switch name {
 	case "annotation":
-		f.Annotations = append(f.Annotations, AnnotationMetadata{})
-		return &f.Annotations[len(f.Annotations)-1]
+		am := &AnnotationMetadata{}
+		f.Annotations = append(f.Annotations, am)
+		return am
 	}
 	return nil
 }
 
+func (f *FieldMetadata) IsArray() bool {
+	switch f.Dimension {
+	case 0:
+		return false
+	case 1:
+		return true
+	default:
+		panic(fmt.Sprintf("dimension value [%d] is not supported", f.Dimension))
+	}
+}
+
+func (f *FieldMetadata) SetHeader(header *Header) {
+	f.ChunkHeader = header
+}
+
+func (f *FieldMetadata) Unsigned(classMap ClassMap) bool {
+	if f.unsigned == nil {
+		f.resolve(classMap)
+	}
+	return *f.unsigned
+}
+
+func (f *FieldMetadata) Unit(classMap ClassMap) *units.Unit {
+	if f.unit == nil {
+		f.resolve(classMap)
+	}
+	if f.unit == units.Unknown {
+		return nil
+	}
+	return f.unit
+}
+
+func (f *FieldMetadata) TickTimestamp(classMap ClassMap) bool {
+	if f.tickTimestamp == nil {
+		f.resolve(classMap)
+	}
+	return *f.tickTimestamp
+}
+
+func (f *FieldMetadata) resolve(classMap ClassMap) {
+	for _, annotation := range f.Annotations {
+		switch classMap[annotation.ClassID].Name {
+		case annotationUnsigned:
+			f.unsigned = utils.NewPointer(true)
+		case annotationMemoryAmount, annotationDataAmount:
+			f.unit = units.Byte
+		case annotationPercentage:
+			f.unit = units.Multiple
+		case annotationTimespan:
+			switch annotation.Values[valueProperty] {
+			case unitTicks:
+				f.unit = units.Nanosecond.Derived("tick", units.F64(1e9/float64(f.ChunkHeader.TicksPerSecond)))
+			case unitNS:
+				f.unit = units.Nanosecond
+			case unitMS:
+				f.unit = units.Millisecond
+			case unitS:
+				f.unit = units.Second
+			}
+		case annotationFrequency:
+			f.unit = units.Hertz
+		case annotationTimestamp:
+			switch annotation.Values[valueProperty] {
+			case unitTicks:
+				f.tickTimestamp = utils.NewPointer(true)
+			case unitSSinceEpoch:
+				f.unit = units.UnixSecond
+			case unitMSSinceEpoch:
+				f.unit = units.UnixMilli
+			case unitNSSinceEpoch:
+				f.unit = units.UnixNano
+			}
+		}
+	}
+	if f.unsigned == nil {
+		f.unsigned = utils.NewPointer(false)
+	}
+	if f.tickTimestamp == nil {
+		f.tickTimestamp = utils.NewPointer(false)
+	}
+	if f.unit == nil {
+		f.unit = units.Unknown
+	}
+}
+
 type ClassMetadata struct {
-	ID          int64
-	Name        string
-	SuperType   string
-	SimpleType  bool
-	Fields      []FieldMetadata
-	Settings    []SettingMetadata
-	Annotations []AnnotationMetadata
+	ID         int64
+	Name       string
+	SuperType  string
+	SimpleType bool
+	Fields     []*FieldMetadata
+	fieldsDict map[string]*FieldMetadata
+	Settings   []*SettingMetadata
+	ClassMap   ClassMap // redundant ClassMap here is for getting field class more easily
+	ClassAnnotation
+}
+
+func (c *ClassMetadata) Category() []string {
+	if c.categories == nil {
+		for _, annotation := range c.Annotations {
+			if c.ClassMap[annotation.ClassID].Name == annotationCategory {
+				categories := make([]string, 0, len(annotation.Values))
+				idx := 0
+				for {
+					cat, ok := annotation.Values[fmt.Sprintf("%s-%d", valueProperty, idx)]
+					if !ok {
+						break
+					}
+					categories = append(categories, cat)
+					idx++
+				}
+				c.categories = categories
+			}
+			if c.categories == nil {
+				c.categories = []string{}
+			}
+		}
+	}
+	return c.categories
+}
+
+func (c *ClassMetadata) Unit(fieldName string) *units.Unit {
+	fieldMeta := c.GetField(fieldName)
+	if fieldMeta == nil {
+		return nil
+	}
+	return fieldMeta.Unit(c.ClassMap)
+}
+
+func (c *ClassMetadata) Unsigned(fieldName string) bool {
+	fieldMeta := c.GetField(fieldName)
+	if fieldMeta == nil {
+		return false
+	}
+	return fieldMeta.Unsigned(c.ClassMap)
+}
+
+func (c *ClassMetadata) buildFieldMap() {
+	if c.fieldsDict == nil {
+		c.fieldsDict = make(map[string]*FieldMetadata, len(c.Fields))
+		for _, field := range c.Fields {
+			c.fieldsDict[field.Name] = field
+		}
+	}
 }
 
 func (c *ClassMetadata) SetAttribute(key, value string) (err error) {
@@ -104,17 +230,39 @@ func (c *ClassMetadata) SetAttribute(key, value string) (err error) {
 	return err
 }
 
+func (c *ClassMetadata) ContainsField(fieldName, fieldClass string) bool {
+	md := c.GetField(fieldName)
+	if md == nil {
+		return false
+	}
+
+	if c.ClassMap[md.ClassID].Name == fieldClass {
+		return true
+	}
+	return false
+}
+
+func (c *ClassMetadata) GetField(fieldName string) *FieldMetadata {
+	if c.fieldsDict == nil {
+		c.buildFieldMap()
+	}
+	return c.fieldsDict[fieldName]
+}
+
 func (c *ClassMetadata) AppendChild(name string) Element {
 	switch name {
 	case "field":
-		c.Fields = append(c.Fields, FieldMetadata{})
-		return &c.Fields[len(c.Fields)-1]
+		fm := &FieldMetadata{}
+		c.Fields = append(c.Fields, fm)
+		return fm
 	case "setting":
-		c.Settings = append(c.Settings, SettingMetadata{})
-		return &c.Settings[len(c.Settings)-1]
+		sm := &SettingMetadata{}
+		c.Settings = append(c.Settings, sm)
+		return sm
 	case "annotation":
-		c.Annotations = append(c.Annotations, AnnotationMetadata{})
-		return &c.Annotations[len(c.Annotations)-1]
+		am := &AnnotationMetadata{}
+		c.Annotations = append(c.Annotations, am)
+		return am
 	}
 	return nil
 }
@@ -128,8 +276,11 @@ func (m *Metadata) SetAttribute(string, string) error { return nil }
 func (m *Metadata) AppendChild(name string) Element {
 	switch name {
 	case "class":
-		m.Classes = append(m.Classes, &ClassMetadata{})
-		return m.Classes[len(m.Classes)-1]
+		cm := &ClassMetadata{}
+		m.Classes = append(m.Classes, cm)
+		return cm
+	default:
+		slog.Info("unsupported metadata filed", slog.String("fieldName", name))
 	}
 	return nil
 }
@@ -175,14 +326,26 @@ func (r *Root) AppendChild(name string) Element {
 	return nil
 }
 
-type MetadataEvent struct {
+type ChunkMetadata struct {
 	StartTime int64
 	Duration  int64
 	ID        int64
-	Root      Root
+	Root      *Root
+	Header    *Header
+	ClassMap  ClassMap
 }
 
-func (m *MetadataEvent) Parse(r Reader) (err error) {
+func (m *ChunkMetadata) buildClassMap() {
+	classMap := make(ClassMap, len(m.Root.Metadata.Classes))
+	for _, class := range m.Root.Metadata.Classes {
+		class.ClassMap = classMap // assign all class to every class metadata
+		classMap[class.ID] = class
+	}
+
+	m.ClassMap = classMap
+}
+
+func (m *ChunkMetadata) Parse(r Reader) (err error) {
 	if kind, err := r.VarLong(); err != nil {
 		return fmt.Errorf("unable to retrieve event type: %w", err)
 	} else if kind != 0 {
@@ -205,8 +368,10 @@ func (m *MetadataEvent) Parse(r Reader) (err error) {
 	// TODO: assert n is small enough
 	strings := make([]string, n)
 	for i := 0; i < int(n); i++ {
-		if strings[i], err = r.String(nil); err != nil {
+		if x, err := r.String(); err != nil {
 			return fmt.Errorf("unable to parse metadata event's string: %w", err)
+		} else {
+			strings[i] = x.s
 		}
 	}
 
@@ -218,29 +383,12 @@ func (m *MetadataEvent) Parse(r Reader) (err error) {
 		return fmt.Errorf("invalid root element name: %s", name)
 	}
 
-	m.Root = Root{}
-	if err := parseElement(r, strings, &m.Root); err != nil {
+	m.Root = &Root{}
+	if err = parseElement(r, strings, m.Header, m.Root); err != nil {
 		return fmt.Errorf("unable to parse metadata element tree: %w", err)
 	}
 
-	classes := make(map[int64]*ClassMetadata)
-	for _, clazz := range m.Root.Metadata.Classes {
-		classes[clazz.ID] = clazz
-	}
-
-	for _, clazz := range m.Root.Metadata.Classes {
-		fmt.Println("metadata class name:", clazz.Name)
-
-		for _, anno := range clazz.Annotations {
-			fmt.Println("class annotation class: ", classes[anno.Class].Name, "class annotation value: ", anno.Values)
-		}
-
-		for _, field := range clazz.Fields {
-			fmt.Println("field name:", field.Name, "field ID:", classes[field.Class].Name, "ConstantPool: ", field.ConstantPool, "Dimension:", field.Dimension)
-		}
-		fmt.Println("--------------------------------------")
-
-	}
+	m.buildClassMap()
 
 	return nil
 }
@@ -347,13 +495,17 @@ func (p *Parser) readMeta(pos int) error {
 	}
 	return nil
 }
-func parseElement(r Reader, s []string, e Element) error {
+func parseElement(r Reader, s []string, chunkHeader *Header, e Element) error {
 	n, err := r.VarInt()
 	if err != nil {
 		return fmt.Errorf("unable to parse attribute count: %w", err)
 	}
-	// TODO: assert n is small enough
-	for i := 0; i < int(n); i++ {
+
+	if ex, ok := e.(ElementWithHeader); ok {
+		ex.SetHeader(chunkHeader)
+	}
+
+	for i := int64(0); i < int64(n); i++ {
 		k, err := parseName(r, s)
 		if err != nil {
 			return fmt.Errorf("unable to parse attribute key: %w", err)
@@ -380,7 +532,9 @@ func parseElement(r Reader, s []string, e Element) error {
 		if child == nil {
 			return fmt.Errorf("unexpected child in metadata event: %s", name)
 		}
-		parseElement(r, s, child)
+		if err = parseElement(r, s, chunkHeader, child); err != nil {
+			return fmt.Errorf("unable to parse child element: %w", err)
+		}
 	}
 	return nil
 }

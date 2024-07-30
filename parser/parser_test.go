@@ -6,22 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"os"
 	"testing"
 )
 
-func testParseFile(name string) ([]Chunk, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, fmt.Errorf("unable to open jfr file: %w", err)
-	}
-	defer f.Close()
-	return Parse(f)
+func init() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 }
 
 func TestParseUncompressed(t *testing.T) {
-	chunks, err := testParseFile("./testdata/ddtrace.jfr")
+	chunks, err := ParseFile("./testdata/ddtrace.jfr")
 	if err != nil {
 		t.Fatalf("Unable to parse jfr file: %s", err)
 	}
@@ -29,42 +24,11 @@ func TestParseUncompressed(t *testing.T) {
 }
 
 func TestParseZip(t *testing.T) {
-	chunks, err := testParseFile("./testdata/ddtrace.jfr.zip")
+	chunks, err := ParseFile("./testdata/ddtrace.jfr.zip")
 	if err != nil {
 		t.Fatalf("Unable to parse jfr file: %s", err)
 	}
 	fmt.Println("chunks length: ", len(chunks))
-}
-
-func TestParseLZ4(t *testing.T) {
-
-	chunks, err := testParseFile("./testdata/ddtrace.jfr.lz4")
-	if err != nil {
-		t.Fatalf("Unable to parse jfr file: %s", err)
-	}
-
-	for _, chunk := range chunks {
-		for _, event := range chunk.Events {
-			meta := event.GetMetadata()
-			if meta.Name == "jdk.ExecutionSample" {
-				for _, field := range meta.Fields {
-					fmt.Println(field.Name, field.Class)
-				}
-
-				if ge, ok := event.(*GenericEvent); ok {
-					var x ThreadState
-					if err := ge.GetAttr("state", &x); err != nil {
-						log.Fatal(err)
-					}
-					log.Println("x: ", x.Name)
-				}
-
-				fmt.Printf("%T, EventType: %s\n", event, meta.Name)
-			}
-		}
-	}
-
-	fmt.Println("chunks length:", len(chunks))
 }
 
 func TestParse(t *testing.T) {

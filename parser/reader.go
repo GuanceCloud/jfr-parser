@@ -2,11 +2,19 @@ package parser
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 
 	reader2 "github.com/grafana/jfr-parser/reader"
+)
+
+const (
+	StringEncodingNull            = 0
+	StringEncodingEmptyString     = 1
+	StringEncodingConstantPool    = 2
+	StringEncodingUtf8ByteArray   = 3
+	StringEncodingCharArray       = 4
+	StringEncodingLatin1ByteArray = 5
 )
 
 type Reader interface {
@@ -18,7 +26,7 @@ type Reader interface {
 	Long() (int64, error)
 	Float() (float32, error)
 	Double() (float64, error)
-	String(pool *CPool) (string, error)
+	String() (*String, error)
 
 	reader2.VarReader
 
@@ -94,39 +102,33 @@ func (r reader) Double() (float64, error) {
 }
 
 // TODO: Should we differentiate between null and empty?
-func (r reader) String(pool *CPool) (string, error) {
+func (r reader) String() (*String, error) {
+	s := new(String)
 	enc, err := r.Byte()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	switch enc {
-	case 0:
-		return "", nil
-	case 1:
-		return "", nil
-	case 2: // constant pool reference
+	case StringEncodingNull:
+		return s, nil
+	case StringEncodingEmptyString:
+		return s, nil
+	case StringEncodingConstantPool:
 		idx, err := r.VarLong()
 		if err != nil {
-			fmt.Printf("get constant refrence idx fail: %s\n", err)
-			return "", err
+			return nil, fmt.Errorf("unable to resolve constant refrence index: %w", err)
 		}
-		if pool == nil {
-			return "", errors.New("the string constant pool is nil")
+		s.constantRef = &constantReference{index: idx}
+		return s, nil
+	case StringEncodingUtf8ByteArray, StringEncodingCharArray, StringEncodingLatin1ByteArray:
+		str, err := r.utf8()
+		if err != nil {
+			return nil, err
 		}
-		v, ok := pool.Pool[int(idx)]
-		if !ok {
-			return "", fmt.Errorf("string not found in the pool")
-		}
-		str, ok := v.(*String)
-		if !ok {
-			return "", fmt.Errorf("not type of parser.String")
-		}
-		return string(*str), nil
-	case 3, 4, 5:
-		return r.utf8()
+		s.s = str
+		return s, nil
 	default:
-		// TODO
-		return "", fmt.Errorf("Unsupported string type :%d", enc)
+		return nil, fmt.Errorf("unsupported string type :%d", enc)
 	}
 }
 

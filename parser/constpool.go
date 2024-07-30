@@ -4,18 +4,20 @@ import (
 	"fmt"
 )
 
-type CheckpointEvent struct {
+type ConstantPoolEvent struct {
 	StartTime int64
 	Duration  int64
 	Delta     int64
 	TypeMask  int8
 }
 
-func (c *CheckpointEvent) Parse(r Reader, classes ClassMap, cpools PoolMap) (err error) {
-	if kind, err := r.VarLong(); err != nil {
+func (c *ConstantPoolEvent) Parse(r Reader, classes ClassMap, cpools PoolMap) (err error) {
+	eventType, err := r.VarLong()
+	if err != nil {
 		return fmt.Errorf("unable to retrieve event type: %w", err)
-	} else if kind != 1 {
-		return fmt.Errorf("unexpected checkpoint event type: %d", kind)
+	}
+	if eventType != ConstantPoolEventType {
+		return fmt.Errorf("unexpected checkpoint event type: %d", eventType)
 	}
 	if c.StartTime, err = r.VarLong(); err != nil {
 		return fmt.Errorf("unable to parse checkpoint event's start time: %w", err)
@@ -37,10 +39,10 @@ func (c *CheckpointEvent) Parse(r Reader, classes ClassMap, cpools PoolMap) (err
 		if err != nil {
 			return fmt.Errorf("unable to parse constant pool class: %w", err)
 		}
-		cm, ok := cpools[int(classID)]
+		cPool, ok := cpools[classID]
 		if !ok {
-			cpools[int(classID)] = &CPool{Pool: make(map[int]ParseResolvable)}
-			cm = cpools[int(classID)]
+			cPool = &CPool{Pool: make(map[int64]ParseResolvable)}
+			cpools[classID] = cPool
 		}
 		m, err := r.VarInt()
 		if err != nil {
@@ -56,7 +58,7 @@ func (c *CheckpointEvent) Parse(r Reader, classes ClassMap, cpools PoolMap) (err
 			if err != nil {
 				return fmt.Errorf("unable to parse constant type %d: %w", classID, err)
 			}
-			cm.Pool[int(idx)] = v
+			cPool.Pool[idx] = v
 		}
 	}
 	return nil

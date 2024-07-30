@@ -1,13 +1,24 @@
 package parser
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"unsafe"
 
 	types2 "github.com/grafana/jfr-parser/parser/types"
 	"github.com/grafana/jfr-parser/parser/types/def"
 )
+
+func ParseFile(p string) ([]Chunk, error) {
+	f, err := os.Open(p)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open file [%s]: %w", p, err)
+	}
+	defer f.Close()
+	return Parse(f)
+}
 
 func Parse(r io.Reader) ([]Chunk, error) {
 	rc, err := Decompress(r)
@@ -15,7 +26,7 @@ func Parse(r io.Reader) ([]Chunk, error) {
 		return nil, fmt.Errorf("unable to decompress input stream: %w", err)
 	}
 	defer rc.Close()
-	return ParseWithOptions(rc, &ChunkParseOptions{})
+	return ParseWithOptions(bufio.NewReader(rc), &ChunkParseOptions{})
 }
 
 func ParseWithOptions(r io.Reader, options *ChunkParseOptions) ([]Chunk, error) {
