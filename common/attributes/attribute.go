@@ -2,6 +2,7 @@ package attributes
 
 import (
 	"fmt"
+	"github.com/grafana/jfr-parser/common/types"
 	"github.com/grafana/jfr-parser/common/units"
 	"github.com/grafana/jfr-parser/parser"
 	"log/slog"
@@ -9,31 +10,42 @@ import (
 )
 
 var (
-	GcWhen    = Attr[string]("when", "When", "java.lang.String", "")
-	Blocking  = Attr[bool]("blocking", "Blocking", "boolean", "Whether the thread calling the vm operation was blocked or not")
-	Safepoint = Attr[bool]("safepoint", "Safepoint", "boolean", "Whether the vm operation occured at a safepoint or not")
-)
+	Blocking     = Attr[bool]("blocking", "Blocking", types.Boolean, "Whether the thread calling the vm operation was blocked or not")
+	Safepoint    = Attr[bool]("safepoint", "Safepoint", types.Boolean, "Whether the vm operation occured at a safepoint or not")
+	EventThread  = Attr[*parser.Thread]("eventThread", "Thread", types.Thread, "The thread in which the event occurred")
+	BytesRead    = Attr[units.IQuantity]("bytesRead", "Bytes Read", types.Long, "Number of bytes read from the file (possibly 0)")
+	BytesWritten = Attr[units.IQuantity]("bytesWritten", "Bytes Written", types.Long, "Number of bytes written to the file")
+	SwitchRate   = Attr[float64]("switchRate", "Switch Rate", types.Float, "Number of context switches per second")
 
-var (
-	StartTime           = Attr[units.IQuantity]("startTime", "Start Time", "long", "")
-	EventStacktrace     = Attr[*parser.StackTrace]("stackTrace", "Stack Trace", "jdk.types.StackTrace", "")
-	EventThread         = Attr[*parser.Thread]("eventThread", "Thread", "java.lang.Thread", "The thread in which the event occurred")
-	ThreadStat          = Attr[string]("state", "Thread State", "jdk.types.ThreadState", "")
-	CpuSamplingInterval = Attr[units.IQuantity]("cpuInterval", "CPU Sampling Interval", "", "")
-	SettingName         = Attr[string]("name", "Setting Name", "java.lang.String", "")
-	SettingValue        = Attr[string]("value", "Setting Value", "java.lang.String", "")
-	SettingUnit         = Attr[string]("unit", "Setting Unit", "java.lang.String", "")
-	DatadogEndpoint     = Attr[string]("endpoint", "Endpoint", "java.lang.String", "")
+	StartTime           = AttrNoDesc[units.IQuantity]("startTime", "Start Time", types.Long)
+	GcWhen              = AttrNoDesc[string]("when", "When", types.String)
+	EventStacktrace     = AttrNoDesc[*parser.StackTrace]("stackTrace", "Stack Trace", types.StackTrace)
+	ThreadStat          = AttrNoDesc[string]("state", "Thread State", types.ThreadState)
+	CpuSamplingInterval = AttrNoDesc[units.IQuantity]("cpuInterval", "CPU Sampling Interval", types.Long)
+	SettingName         = AttrNoDesc[string]("name", "Setting Name", types.String)
+	SettingValue        = AttrNoDesc[string]("value", "Setting Value", types.String)
+	SettingUnit         = AttrNoDesc[string]("unit", "Setting Unit", types.String)
+	DatadogEndpoint     = AttrNoDesc[string]("endpoint", "Endpoint", types.String)
+	Duration            = AttrNoDesc[units.IQuantity]("duration", "Duration", types.Long)
+
+	JVMStartTime       = AttrSimple[units.IQuantity]("jvmStartTime", types.Long)
+	SampleWeight       = AttrSimple[int64]("weight", types.Long)
+	AllocWeight        = AttrSimple[float64]("weight", types.Float)
+	AllocSize          = AttrSimple[units.IQuantity]("size", types.Long)
+	WallSampleInterval = AttrSimple[units.IQuantity]("wallInterval", types.Long)
+	Allocated          = AttrSimple[units.IQuantity]("allocated", types.Long)
+	Size               = AttrSimple[units.IQuantity]("size", types.Long)
+	HeapWeight         = AttrSimple[float64]("weight", types.Long)
 )
 
 type Attribute[T any] struct {
 	Name        string // unique identifier for attribute
 	Label       string // human-readable name
-	ClassName   string
+	ClassName   types.FieldClass
 	Description string
 }
 
-func Attr[T any](name, label, className, description string) *Attribute[T] {
+func Attr[T any](name, label string, className types.FieldClass, description string) *Attribute[T] {
 	return &Attribute[T]{
 		Name:        name,
 		Label:       label,
@@ -42,14 +54,14 @@ func Attr[T any](name, label, className, description string) *Attribute[T] {
 	}
 }
 
-func AttrSimple[T any](name, className string) *Attribute[T] {
+func AttrSimple[T any](name string, className types.FieldClass) *Attribute[T] {
 	return &Attribute[T]{
 		Name:      name,
 		ClassName: className,
 	}
 }
 
-func AttrNoDesc[T any](name, label, className string) *Attribute[T] {
+func AttrNoDesc[T any](name, label string, className types.FieldClass) *Attribute[T] {
 	return &Attribute[T]{
 		Name:      name,
 		Label:     label,
@@ -101,7 +113,7 @@ func (a *Attribute[T]) GetValue(event *parser.GenericEvent) (T, error) {
 
 	if fieldUnit != nil || fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
 		var (
-			num      units.Numeric
+			num      units.Number
 			quantity units.IQuantity
 		)
 
@@ -116,8 +128,8 @@ func (a *Attribute[T]) GetValue(event *parser.GenericEvent) (T, error) {
 					x = uint16(*ax)
 				case *parser.Int:
 					x = uint32(*ax)
-					//case *parser.Long: // parser.Long doesn't support unsigned yet
-					//	x = uint64(*ax)
+				case *parser.Long:
+					x = uint64(*ax)
 				}
 				num = units.I64(reflect.ValueOf(x).Uint())
 			} else {

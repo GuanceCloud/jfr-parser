@@ -29,66 +29,76 @@ type ClassMap map[int64]*ClassMetadata
 type PoolMap map[int64]*CPool
 type ChunkEvents map[string]*EventCollection
 
-func (c ChunkEvents) Apply(filter EventFilter) ChunkEvents {
-	newChunkEvents := make(ChunkEvents)
+func (c ChunkEvents) Apply(filter EventFilter) []*GenericEvent {
+	var filtered []*GenericEvent
 
-	for className, collection := range c {
+	for _, collection := range c {
 		predicate := filter.GetPredicate(collection.ClassMetadata)
 		if IsAlwaysFalse(predicate) {
 			continue
 		} else if IsAlwaysTrue(predicate) {
-			newChunkEvents[className] = collection
+			filtered = append(filtered, collection.Events...)
 		} else {
-			ec := &EventCollection{
-				ClassMetadata: collection.ClassMetadata,
-				EventList:     make([]Event, 0),
-			}
-			newChunkEvents[className] = ec
-			for _, event := range collection.EventList {
+			for _, event := range collection.Events {
 				if predicate.Test(event) {
-					ec.Add(event)
+					filtered = append(filtered, event)
 				}
 			}
 		}
 	}
-
-	return newChunkEvents
+	return filtered
 }
 
 type Chunk struct {
 	Header   Header
 	Metadata ChunkMetadata
-	Events   ChunkEvents
+	ChunkEvents
 }
 
 type EventCollection struct {
 	ClassMetadata *ClassMetadata
-	EventList     []Event
+	Events        []*GenericEvent
 }
 
-func (c *EventCollection) Add(e Event) {
-	c.EventList = append(c.EventList, e)
+func (c *EventCollection) Add(e *GenericEvent) {
+	c.Events = append(c.Events, e)
 }
 
 type ChunkParseOptions struct {
 	CPoolProcessor func(meta *ClassMetadata, cpool *CPool)
 }
 
-func (c *Chunk) AddEvent(e *GenericEvent, classMap ClassMap) {
-	if c.Events == nil {
-		c.Events = make(ChunkEvents)
+func (c *Chunk) addEvent(e *GenericEvent) {
+	if c.ChunkEvents == nil {
+		c.ChunkEvents = make(ChunkEvents)
 	}
 
-	classMeta := classMap[e.ClassID]
+	classMeta := c.Metadata.ClassMap[e.ClassID]
 
-	ec, ok := c.Events[classMeta.Name]
+	ec, ok := c.ChunkEvents[classMeta.Name]
 	if !ok {
 		ec = &EventCollection{
 			ClassMetadata: classMeta,
 		}
-		c.Events[classMeta.Name] = ec
+		c.ChunkEvents[classMeta.Name] = ec
 	}
 	ec.Add(e)
+}
+
+func (c *Chunk) ShowClassMeta(name string) {
+	for _, classMeta := range c.Metadata.ClassMap {
+		if classMeta.Name == name {
+			fmt.Printf("simple type: %t, super type: %s\n",
+				classMeta.SimpleType, classMeta.SuperType)
+
+			for _, field := range classMeta.Fields {
+				fmt.Printf("field name: %s, field label: %s, field class: %s, field description: %s, field constant pool: %t, field is array: %t, field unsigned: %t, field unit: %+#v\n",
+					field.Name, field.Label(c.Metadata.ClassMap), c.Metadata.ClassMap[field.ClassID].Name, field.Description(c.Metadata.ClassMap),
+					field.ConstantPool, field.IsArray(), field.Unsigned(c.Metadata.ClassMap), field.Unit(c.Metadata.ClassMap))
+			}
+			break
+		}
+	}
 }
 
 func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
@@ -217,7 +227,7 @@ func (c *Chunk) Parse(r io.Reader, options *ChunkParseOptions) (err error) {
 				return fmt.Errorf("unable to parse event: %w", err)
 			}
 			if ge != nil {
-				c.AddEvent(ge, c.Metadata.ClassMap)
+				c.addEvent(ge)
 			}
 			pointer += int64(size)
 		}

@@ -112,6 +112,53 @@ func TestAndAlways(t *testing.T) {
 
 }
 
+func TestAttributes(t *testing.T) {
+	chunks, err := parser.ParseFile("testdata/prof.jfr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, chunk := range chunks {
+		//for _, collection := range chunk.Apply(VmInfo) {
+		//	for _, event := range collection.Events {
+		//		startTime, err := attributes.JVMStartTime.GetValue(event)
+		//		if err != nil {
+		//			t.Fatal(err)
+		//		}
+		//		t.Logf("iquantity: %d, unit: %v", startTime.IntValue(), *startTime.Unit())
+		//		st, err := units.ToTime(startTime)
+		//		if err != nil {
+		//			t.Fatal(err)
+		//		}
+		//		t.Log("jvm start at: ", st)
+		//	}
+		//}
+
+		//for _, collection := range chunk.Apply(DatadogExecutionSample) {
+		//	for _, event := range collection.Events {
+		//		weight, err := attributes.SampleWeight.GetValue(event)
+		//		if err != nil {
+		//			t.Fatal(err)
+		//		}
+		//		t.Logf("weight: %d", weight)
+		//	}
+		//}
+
+		for _, event := range chunk.Apply(DatadogProfilerConfig) {
+			cpu, err := attributes.CpuSamplingInterval.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wall, err := attributes.WallSampleInterval.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Log("cpu: ", cpu.String())
+			t.Log("wall: ", wall.String())
+		}
+	}
+}
+
 func TestTypes(t *testing.T) {
 	chunks, err := parser.ParseFile("./testdata/prof.jfr")
 	if err != nil {
@@ -120,26 +167,23 @@ func TestTypes(t *testing.T) {
 
 	for _, chunk := range chunks {
 
-		for _, collection := range chunk.Events.Apply(DatadogExecutionSample) {
+		for _, event := range chunk.ChunkEvents.Apply(DatadogExecutionSample) {
 
-			for _, event := range collection.EventList {
+			stackTrace, err := attributes.EventStacktrace.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-				stackTrace, err := attributes.EventStacktrace.GetValue(event.(*parser.GenericEvent))
-				if err != nil {
-					t.Fatal(err)
+			for _, frame := range stackTrace.Frames {
+
+				if frame.Type != nil {
+					t.Logf("frameType description: %s", frame.Type.Description)
 				}
 
-				for _, frame := range stackTrace.Frames {
-
-					if frame.Type != nil {
-						t.Logf("frameType description: %s", frame.Type.Description)
-					}
-
-					if frame.Method != nil {
-						t.Logf("method name: %s, method class: %s", frame.Method.Name.String, frame.Method.Type.Name.String)
-					}
-
+				if frame.Method != nil {
+					t.Logf("method name: %s, method class: %s", frame.Method.Name.String, frame.Method.Type.Name.String)
 				}
+
 			}
 		}
 	}
@@ -147,31 +191,24 @@ func TestTypes(t *testing.T) {
 	attr := attributes.AttrSimple[*parser.InflateCause]("cause", "jdk.types.InflateCause")
 
 	for _, chunk := range chunks {
-		for className, collection := range chunk.Events.Apply(JavaMonitorInflate) {
-			t.Log("class: ", className)
+		for _, event := range chunk.ChunkEvents.Apply(JavaMonitorInflate) {
 
-			for _, event := range collection.EventList {
-				av, err := attr.GetValue(event.(*parser.GenericEvent))
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				t.Logf("av.cause: %s", av.Cause)
+			av, err := attr.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
 			}
+
+			t.Logf("av.cause: %s", av.Cause)
 		}
 	}
 
 	for _, chunk := range chunks {
-		for className, collection := range chunk.Events.Apply(DatadogEndpoint) {
-			t.Logf("class name: %s", className)
-
-			for _, event := range collection.EventList {
-				ep, err := attributes.DatadogEndpoint.GetValue(event.(*parser.GenericEvent))
-				if err != nil {
-					t.Fatal(err)
-				}
-				t.Logf("endpoint: %s", ep)
+		for _, event := range chunk.ChunkEvents.Apply(DatadogEndpoint) {
+			ep, err := attributes.DatadogEndpoint.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
 			}
+			t.Logf("endpoint: %s", ep)
 		}
 	}
 }
@@ -185,32 +222,29 @@ func TestParseLZ4(t *testing.T) {
 
 	for _, chunk := range chunks {
 
-		for _, ec := range chunk.Events.Apply(FilterExecutionSample) {
+		for _, event := range chunk.Apply(FilterExecutionSample) {
 
-			for _, field := range ec.ClassMetadata.Fields {
+			for _, field := range event.ClassMetadata.Fields {
 				t.Logf("field: %s, class: %s, unit: %v",
-					field.Name, ec.ClassMetadata.ClassMap[field.ClassID].Name,
-					field.Unit(ec.ClassMetadata.ClassMap))
+					field.Name, event.ClassMetadata.ClassMap[field.ClassID].Name,
+					field.Unit(event.ClassMetadata.ClassMap))
 
 				for _, annotation := range field.Annotations {
-					t.Logf("class: %s, values: %v", ec.ClassMetadata.ClassMap[annotation.ClassID].Name, annotation.Values)
+					t.Logf("class: %s, values: %v", event.ClassMetadata.ClassMap[annotation.ClassID].Name, annotation.Values)
 				}
 			}
 
-			t.Log(len(ec.EventList))
-
-			for _, event := range ec.EventList {
-				startTime, err := attributes.StartTime.GetValue(event.(*parser.GenericEvent))
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				t.Logf("%d %s", startTime.IntValue(), startTime.Unit().Name)
+			startTime, err := attributes.StartTime.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
 			}
+
+			t.Logf("%d %s", startTime.IntValue(), startTime.Unit().Name)
+
 		}
 
-		for _, ec := range chunk.Events.Apply(DatadogProfilerSetting) {
-			meta := ec.ClassMetadata
+		for _, event := range chunk.Apply(DatadogProfilerSetting) {
+			meta := event.ClassMetadata
 			for _, field := range meta.Fields {
 				slog.Debug("",
 					"field.name", field.Name,
@@ -224,33 +258,29 @@ func TestParseLZ4(t *testing.T) {
 				)
 			}
 
-			slog.Warn("", "class name", meta.Name, "events count", slog.IntValue(len(ec.EventList)))
+			slog.Warn("", "class name", meta.Name)
 
-			for _, event := range ec.EventList {
-				ge := event.(*parser.GenericEvent)
-
-				name, err := attributes.SettingName.GetValue(ge)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				value, err := attributes.SettingValue.GetValue(ge)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				unit, err := attributes.SettingUnit.GetValue(ge)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				t.Logf("setting name: %q, setting value: %q, setting unit: %q", name, value, unit)
-
-				//for key, attr := range ge.Attributes {
-				//	t.Logf("%s: %+#v (%T)\n", key, attr, attr)
-				//}
-				t.Logf("\n")
+			name, err := attributes.SettingName.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
 			}
+
+			value, err := attributes.SettingValue.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			unit, err := attributes.SettingUnit.GetValue(event)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Logf("setting name: %q, setting value: %q, setting unit: %q", name, value, unit)
+
+			//for key, attr := range ge.Attributes {
+			//	t.Logf("%s: %+#v (%T)\n", key, attr, attr)
+			//}
+			t.Logf("\n")
 		}
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/grafana/jfr-parser/parser/types/def"
 )
 
-func ParseFile(p string) ([]Chunk, error) {
+func ParseFile(p string) ([]*Chunk, error) {
 	f, err := os.Open(p)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open file [%s]: %w", p, err)
@@ -20,7 +20,7 @@ func ParseFile(p string) ([]Chunk, error) {
 	return Parse(f)
 }
 
-func Parse(r io.Reader) ([]Chunk, error) {
+func Parse(r io.Reader) ([]*Chunk, error) {
 	rc, err := Decompress(r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decompress input stream: %w", err)
@@ -29,10 +29,10 @@ func Parse(r io.Reader) ([]Chunk, error) {
 	return ParseWithOptions(bufio.NewReader(rc), &ChunkParseOptions{})
 }
 
-func ParseWithOptions(r io.Reader, options *ChunkParseOptions) ([]Chunk, error) {
-	var chunks []Chunk
+func ParseWithOptions(r io.Reader, options *ChunkParseOptions) ([]*Chunk, error) {
+	var chunks []*Chunk
 	for {
-		var chunk Chunk
+		chunk := new(Chunk)
 		err := chunk.Parse(r, options)
 		if err == io.EOF {
 			return chunks, nil

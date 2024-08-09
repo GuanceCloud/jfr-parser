@@ -27,7 +27,7 @@ func main() {
 	log.Printf("Parsed %d chunks in %v", len(chunks), t2.Sub(t1))
 	events := make(map[string]int)
 	for _, c := range chunks {
-		for _, e := range c.Events {
+		for _, e := range c.ChunkEvents {
 			events[fmt.Sprintf("%T", e)]++
 		}
 	}

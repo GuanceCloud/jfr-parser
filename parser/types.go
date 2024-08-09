@@ -5,79 +5,51 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+
+	types2 "github.com/grafana/jfr-parser/common/types"
 )
 
-/**
-field class ID: -----------------:  jdk.types.GCCause
-field class ID: -----------------:  jdk.types.ReferenceType
-field class ID: -----------------:  jdk.types.OldObjectArray
-field class ID: -----------------:  jdk.types.VirtualSpace
-field class ID: -----------------:  jdk.types.MetaspaceSizes
-field class ID: -----------------:  jdk.types.CompilerPhaseType
-field class ID: -----------------:  jdk.types.OldObjectGcRoot
-field class ID: -----------------:  jdk.types.ThreadGroup
-field class ID: -----------------:  jdk.types.OldObject
-field class ID: -----------------:  jdk.types.CalleeMethod
-field class ID: -----------------:  jdk.types.MetadataType
-field class ID: -----------------:  jdk.types.MetaspaceObjectType
-field class ID: -----------------:  jdk.types.ZStatisticsSamplerType
-field class ID: -----------------:  jdk.types.GCThresholdUpdater
-field class ID: -----------------:  jdk.types.OldObjectRootType
-field class ID: -----------------:  jdk.types.Reference
-field class ID: -----------------:  jdk.types.GCWhen
-field class ID: -----------------:  jdk.types.G1HeapRegionType
-field class ID: -----------------:  jdk.types.ZStatisticsCounterType
-field class ID: -----------------:  jdk.types.ShenandoahHeapRegionState
-field class ID: -----------------:  jdk.types.ObjectSpace
-field class ID: -----------------:  jdk.types.VMOperationType
-field class ID: -----------------:  jdk.types.OldObjectRootSystem
-field class ID: -----------------:  jdk.types.OldObjectField
-field class ID: -----------------:  jdk.types.InflateCause
-field class ID: -----------------:  jdk.types.G1EvacuationStatistics
-field class ID: -----------------:  jdk.types.CopyFailed
-*/
-
-var types = map[string]func() ParseResolvable{
-	"boolean":                        NewParseResolvable[*Boolean],
-	"byte":                           NewParseResolvable[*Byte],
-	"char":                           NewParseResolvable[*Char],
-	"double":                         NewParseResolvable[*Double],
-	"float":                          NewParseResolvable[*Float],
-	"int":                            NewParseResolvable[*Int],
-	"long":                           NewParseResolvable[*Long],
-	"short":                          NewParseResolvable[*Short],
-	"java.lang.Class":                NewParseResolvable[*Class],
-	"java.lang.String":               NewParseResolvable[*String],
-	"java.lang.Thread":               NewParseResolvable[*Thread],
-	"jdk.types.ClassLoader":          NewParseResolvable[*ClassLoader],
-	"jdk.types.CodeBlobType":         NewParseResolvable[*CodeBlobType],
-	"jdk.types.FlagValueOrigin":      NewParseResolvable[*FlagValueOrigin],
-	"jdk.types.FrameType":            NewParseResolvable[*FrameType],
-	"jdk.types.G1YCType":             NewParseResolvable[*G1YCType],
-	"jdk.types.GCName":               NewParseResolvable[*GCName],
-	"jdk.types.Method":               NewParseResolvable[*Method],
-	"jdk.types.Module":               NewParseResolvable[*Module],
-	"jdk.types.NarrowOopMode":        NewParseResolvable[*NarrowOopMode],
-	"jdk.types.NetworkInterfaceName": NewParseResolvable[*NetworkInterfaceName],
-	"jdk.types.Package":              NewParseResolvable[*Package],
-	"jdk.types.StackFrame":           NewParseResolvable[*StackFrame],
-	"jdk.types.StackTrace":           NewParseResolvable[*StackTrace],
-	"jdk.types.Symbol":               NewParseResolvable[*Symbol],
-	"jdk.types.ThreadState":          NewParseResolvable[*ThreadState],
-	"jdk.types.InflateCause":         NewParseResolvable[*InflateCause],
-	"jdk.types.GCCause":              NewParseResolvable[*GCCause],
-	"jdk.types.CompilerPhaseType":    NewParseResolvable[*CompilerPhaseType],
-	"jdk.types.ThreadGroup":          NewParseResolvable[*ThreadGroup],
-	"jdk.types.GCThresholdUpdater":   NewParseResolvable[*GCThresholdUpdater],
-	"jdk.types.MetaspaceObjectType":  NewParseResolvable[*MetaspaceObjectType],
-	"datadog.types.ExecutionMode":    NewParseResolvable[*ExecutionMode],
-	"jdk.types.VMOperationType":      NewParseResolvable[*VMOperationType],
-	"jdk.types.G1HeapRegionType":     NewParseResolvable[*G1HeapRegionType],
-	"jdk.types.GCWhen":               NewParseResolvable[*GCWhen],
-	"jdk.types.ReferenceType":        NewParseResolvable[*ReferenceType],
-	"jdk.types.MetadataType":         NewParseResolvable[*MetadataType],
-	"profiler.types.LogLevel":        NewParseResolvable[*LogLevel],
-	"profiler.types.AttributeValue":  NewParseResolvable[*AttributeValue],
+var types = map[types2.FieldClass]func() ParseResolvable{
+	types2.Boolean:              NewParseResolvable[*Boolean],
+	types2.Byte:                 NewParseResolvable[*Byte],
+	types2.Char:                 NewParseResolvable[*Char],
+	types2.Double:               NewParseResolvable[*Double],
+	types2.Float:                NewParseResolvable[*Float],
+	types2.Int:                  NewParseResolvable[*Int],
+	types2.Long:                 NewParseResolvable[*Long],
+	types2.Short:                NewParseResolvable[*Short],
+	types2.Class:                NewParseResolvable[*Class],
+	types2.String:               NewParseResolvable[*String],
+	types2.Thread:               NewParseResolvable[*Thread],
+	types2.ClassLoader:          NewParseResolvable[*ClassLoader],
+	types2.CodeBlobType:         NewParseResolvable[*CodeBlobType],
+	types2.FlagValueOrigin:      NewParseResolvable[*FlagValueOrigin],
+	types2.FrameType:            NewParseResolvable[*FrameType],
+	types2.G1YCType:             NewParseResolvable[*G1YCType],
+	types2.GCName:               NewParseResolvable[*GCName],
+	types2.Method:               NewParseResolvable[*Method],
+	types2.Module:               NewParseResolvable[*Module],
+	types2.NarrowOopMode:        NewParseResolvable[*NarrowOopMode],
+	types2.NetworkInterfaceName: NewParseResolvable[*NetworkInterfaceName],
+	types2.Package:              NewParseResolvable[*Package],
+	types2.StackFrame:           NewParseResolvable[*StackFrame],
+	types2.StackTrace:           NewParseResolvable[*StackTrace],
+	types2.Symbol:               NewParseResolvable[*Symbol],
+	types2.ThreadState:          NewParseResolvable[*ThreadState],
+	types2.InflateCause:         NewParseResolvable[*InflateCause],
+	types2.GCCause:              NewParseResolvable[*GCCause],
+	types2.CompilerPhaseType:    NewParseResolvable[*CompilerPhaseType],
+	types2.ThreadGroup:          NewParseResolvable[*ThreadGroup],
+	types2.GCThresholdUpdater:   NewParseResolvable[*GCThresholdUpdater],
+	types2.MetaspaceObjectType:  NewParseResolvable[*MetaspaceObjectType],
+	types2.ExecutionMode:        NewParseResolvable[*ExecutionMode],
+	types2.VMOperationType:      NewParseResolvable[*VMOperationType],
+	types2.G1HeapRegionType:     NewParseResolvable[*G1HeapRegionType],
+	types2.GCWhen:               NewParseResolvable[*GCWhen],
+	types2.ReferenceType:        NewParseResolvable[*ReferenceType],
+	types2.MetadataType:         NewParseResolvable[*MetadataType],
+	types2.LogLevel:             NewParseResolvable[*LogLevel],
+	types2.AttributeValue:       NewParseResolvable[*AttributeValue],
 }
 
 var (
@@ -119,7 +91,7 @@ func ParseClass(r Reader, classes ClassMap, cpools PoolMap, classID int64) (Pars
 		return nil, fmt.Errorf("unexpected class %d", classID)
 	}
 	var v ParseResolvable
-	if typeFn, ok := types[class.Name]; ok {
+	if typeFn, ok := types[types2.FieldClass(class.Name)]; ok {
 		v = typeFn()
 	} else {
 		v = NewParseResolvable[*DefaultStructType]()

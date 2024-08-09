@@ -191,6 +191,10 @@ func (c *ClassMetadata) Category() []string {
 	return c.categories
 }
 
+func (c *ClassMetadata) Label() string {
+	return c.BaseAnnotation.Label(c.ClassMap)
+}
+
 func (c *ClassMetadata) Unit(fieldName string) *units.Unit {
 	fieldMeta := c.GetField(fieldName)
 	if fieldMeta == nil {
@@ -343,6 +347,7 @@ func (m *ChunkMetadata) buildClassMap() {
 	}
 
 	m.ClassMap = classMap
+	m.Root.Metadata.Classes = nil
 }
 
 func (m *ChunkMetadata) Parse(r Reader) (err error) {

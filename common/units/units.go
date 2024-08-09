@@ -2,21 +2,38 @@ package units
 
 type Kind int
 
-var (
+const (
 	UnknownKind Kind = 0
-	TimeSpan    Kind = 1
+	Duration    Kind = 1
 	Memory      Kind = 2
-	Number      Kind = 3
+	Numeric     Kind = 3
 	TimeStamp   Kind = 4
 	Frequency   Kind = 5
 	Percentage  Kind = 6
 )
 
-type Numeric interface {
+var kindDesc = [...]string{
+	UnknownKind: "unknown",
+	Duration:    "duration",
+	Memory:      "memory",
+	Numeric:     "numeric",
+	TimeStamp:   "timestamp",
+	Frequency:   "frequency",
+	Percentage:  "percentage",
+}
+
+func (k Kind) String() string {
+	if int(k) < len(kindDesc) {
+		return kindDesc[k]
+	}
+	return ""
+}
+
+type Number interface {
 	Float() bool
 	Int64() int64
 	Float64() float64
-	Multi(n Numeric) Numeric
+	Multi(n Number) Number
 }
 
 type I64 int64
@@ -33,7 +50,7 @@ func (i I64) Float64() float64 {
 	return float64(i)
 }
 
-func (i I64) Multi(n Numeric) Numeric {
+func (i I64) Multi(n Number) Number {
 	if n.Float() {
 		return F64(n.Float64() * i.Float64())
 	}
@@ -55,20 +72,20 @@ func (f F64) Float64() float64 {
 	return float64(f)
 }
 
-func (f F64) Multi(n Numeric) Numeric {
+func (f F64) Multi(n Number) Number {
 	return F64(float64(f) * n.Float64())
 }
 
-var _ Numeric = F64(0)
-var _ Numeric = I64(0)
+var _ Number = F64(0)
+var _ Number = I64(0)
 
 type Unit struct {
 	Name string
 	Kind Kind
-	Base Numeric
+	Base Number
 }
 
-func newUnit(Name string, kind Kind, Base Numeric) *Unit {
+func newUnit(Name string, kind Kind, Base Number) *Unit {
 	return &Unit{
 		Kind: kind,
 		Name: Name,
@@ -76,7 +93,7 @@ func newUnit(Name string, kind Kind, Base Numeric) *Unit {
 	}
 }
 
-func (u *Unit) Derived(Name string, times Numeric) *Unit {
+func (u *Unit) Derived(Name string, times Number) *Unit {
 	return &Unit{
 		Kind: u.Kind,
 		Name: Name,
@@ -84,10 +101,18 @@ func (u *Unit) Derived(Name string, times Numeric) *Unit {
 	}
 }
 
+func (u *Unit) IntQuantity(n int64) IQuantity {
+	return NewIntQuantity(n, u)
+}
+
+func (u *Unit) FloatQuantity(n float64) IQuantity {
+	return NewFloatQuantity(n, u)
+}
+
 var (
 	Unknown = newUnit("unknown", UnknownKind, I64(0))
 
-	Nanosecond  = newUnit("ns", TimeSpan, I64(1))
+	Nanosecond  = newUnit("ns", Duration, I64(1))
 	Microsecond = Nanosecond.Derived("μs", I64(1000))
 	Millisecond = Microsecond.Derived("ms", I64(1000))
 	Second      = Millisecond.Derived("s", I64(1000))
