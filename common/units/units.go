@@ -33,6 +33,7 @@ type Number interface {
 	Float() bool
 	Int64() int64
 	Float64() float64
+	Add(n Number) Number
 	Multi(n Number) Number
 }
 
@@ -48,6 +49,13 @@ func (i I64) Int64() int64 {
 
 func (i I64) Float64() float64 {
 	return float64(i)
+}
+
+func (i I64) Add(n Number) Number {
+	if !n.Float() {
+		return I64(i.Int64() + n.Int64())
+	}
+	return F64(i.Float64() + n.Float64())
 }
 
 func (i I64) Multi(n Number) Number {
@@ -70,6 +78,10 @@ func (f F64) Int64() int64 {
 
 func (f F64) Float64() float64 {
 	return float64(f)
+}
+
+func (f F64) Add(n Number) Number {
+	return F64(f.Float64() + n.Float64())
 }
 
 func (f F64) Multi(n Number) Number {
