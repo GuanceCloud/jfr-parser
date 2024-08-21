@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/grafana/jfr-parser/common/units"
 	"github.com/grafana/jfr-parser/internal/utils"
-	"log/slog"
 	"strconv"
 
 	"github.com/grafana/jfr-parser/parser/types/def"
@@ -284,7 +283,6 @@ func (m *Metadata) AppendChild(name string) Element {
 		m.Classes = append(m.Classes, cm)
 		return cm
 	default:
-		slog.Info("unsupported metadata filed", slog.String("fieldName", name))
 	}
 	return nil
 }

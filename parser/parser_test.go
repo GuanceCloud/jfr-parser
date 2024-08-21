@@ -6,14 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log/slog"
 	"os"
 	"testing"
 )
-
-func init() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-}
 
 func TestParseUncompressed(t *testing.T) {
 	chunks, err := ParseFile("./testdata/ddtrace.jfr")

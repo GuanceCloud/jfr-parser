@@ -4,7 +4,6 @@ import (
 	"github.com/grafana/jfr-parser/common/attributes"
 	"github.com/grafana/jfr-parser/common/types"
 	"github.com/grafana/jfr-parser/parser"
-	"log/slog"
 	"reflect"
 )
 
@@ -27,9 +26,9 @@ var (
 	ThreadWaiting               = AttributeEqual(attributes.ThreadStat, Waiting)
 	DdMethodSampleThreadParked  = AndFilters(DatadogMethodSample, ThreadParked)
 	DdMethodSampleThreadWaiting = AndFilters(DatadogMethodSample, ThreadWaiting)
-	FileIo            = Types(types.FileRead, types.FileWrite)
-	SocketIO          = Types(types.SocketRead, types.SocketWrite)
-	StacktraceNotNull = NotNull(attributes.EventStacktrace)
+	FileIo                      = Types(types.FileRead, types.FileWrite)
+	SocketIO                    = Types(types.SocketRead, types.SocketWrite)
+	StacktraceNotNull           = NotNull(attributes.EventStacktrace)
 	ALLOCATION                  = AndFilters(AllocAll, StacktraceNotNull)
 	ObjAllocation               = AndFilters(ObjAlloc, StacktraceNotNull)
 	MonitorEnterStacktrace      = AndFilters(MonitorEnter, StacktraceNotNull)
@@ -277,7 +276,6 @@ func AttributeEqual[T comparable](attr *attributes.Attribute[T], target T) parse
 		return parser.PredicateFunc[parser.Event](func(e parser.Event) bool {
 			value, err := attr.GetValue(e.(*parser.GenericEvent))
 			if err != nil {
-				slog.Warn("unable to get attribute", "attribute", attr.Name)
 				return false
 			}
 			return value == target

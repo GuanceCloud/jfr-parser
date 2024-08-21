@@ -3,7 +3,6 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"reflect"
 
 	types2 "github.com/grafana/jfr-parser/common/types"
@@ -358,11 +357,6 @@ func resolveConstants(classes ClassMap, cpools PoolMap, constants *[]constantRef
 		}
 		it, ok := p.Pool[c.index]
 		if !ok {
-			slog.Info("constant value doesn't exist",
-				slog.Int64("class id", c.classID),
-				slog.String("pool class", classes[c.classID].Name),
-				slog.Int64("constant index", c.index),
-			)
 			// Non-existent constant pool references seem to be used to mark no s
 			continue
 		}

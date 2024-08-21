@@ -5,7 +5,6 @@ import (
 	"github.com/grafana/jfr-parser/common/types"
 	"github.com/grafana/jfr-parser/common/units"
 	"github.com/grafana/jfr-parser/parser"
-	"log/slog"
 	"reflect"
 )
 
@@ -105,11 +104,6 @@ func (a *Attribute[T]) GetValue(event *parser.GenericEvent) (T, error) {
 
 	fieldMeta := event.ClassMetadata.GetField(a.Name)
 	fieldUnit := fieldMeta.Unit(event.ClassMetadata.ClassMap)
-
-	slog.Debug("unit: ", slog.Bool("is nil", fieldUnit == nil))
-	if fieldUnit != nil {
-		slog.Debug("unit: ", slog.String("name", fieldUnit.Name))
-	}
 
 	if fieldUnit != nil || fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
 		var (

@@ -4,7 +4,6 @@ import (
 	"github.com/grafana/jfr-parser/common/attributes"
 	"github.com/grafana/jfr-parser/parser"
 	"github.com/stretchr/testify/assert"
-	"log/slog"
 	"strings"
 	"testing"
 )
@@ -213,6 +212,14 @@ func TestTypes(t *testing.T) {
 	}
 }
 
+func TestParseFile(t *testing.T) {
+	cks, err := parser.ParseFile("testdata/corrupt.jfr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(len(cks))
+}
+
 func TestParseLZ4(t *testing.T) {
 	chunks, err := parser.ParseFile("./testdata/ddtrace.jfr.lz4")
 
@@ -244,21 +251,6 @@ func TestParseLZ4(t *testing.T) {
 		}
 
 		for _, event := range chunk.Apply(DatadogProfilerSetting) {
-			meta := event.ClassMetadata
-			for _, field := range meta.Fields {
-				slog.Debug("",
-					"field.name", field.Name,
-					"field.classID", field.ClassID,
-					"filed.className", meta.ClassMap[field.ClassID].Name,
-					"field.IsArray", field.IsArray(),
-					"field.unit", field.Unit(meta.ClassMap),
-					"field.unsigned", field.Unsigned(meta.ClassMap),
-					"field label", field.Label(meta.ClassMap),
-					"field description", field.Description(meta.ClassMap),
-				)
-			}
-
-			slog.Warn("", "class name", meta.Name)
 
 			name, err := attributes.SettingName.GetValue(event)
 			if err != nil {
