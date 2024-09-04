@@ -4,8 +4,8 @@ go 1.21
 
 require (
 	github.com/grafana/jfr-parser/pprof v0.0.0-20240428042017-f984a370a654
-	github.com/pierrec/lz4/v4 v4.1.21
-	github.com/stretchr/testify v1.8.4
+	github.com/pierrec/lz4/v4 v4.1.18
+	github.com/stretchr/testify v1.9.0
 	github.com/zhyee/zipstream v0.0.0-20230625125559-133d8d1afaa0
 )
 
