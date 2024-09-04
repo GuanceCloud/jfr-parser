@@ -5,17 +5,14 @@ import (
 )
 
 var (
-	AlwaysTrue  Predicate[Event] = PredicateFunc[Event](TrueFn[Event])
-	AlwaysFalse Predicate[Event] = PredicateFunc[Event](FalseFn[Event])
+	AlwaysTrue  Predicate[Event] = TrueFn
+	AlwaysFalse Predicate[Event] = FalseFn
 )
 
-func TrueFn[T any](T) bool {
-	return true
-}
-
-func FalseFn[T any](T) bool {
-	return false
-}
+var (
+	TrueFn  PredicateFunc = func(Event) bool { return true }
+	FalseFn PredicateFunc = func(Event) bool { return false }
+)
 
 type EventFilter interface {
 	GetPredicate(metadata *ClassMetadata) Predicate[Event]
@@ -25,26 +22,26 @@ type Predicate[T any] interface {
 	Test(t T) bool
 }
 
-type PredicateFunc[T any] func(t T) bool
+type PredicateFunc func(Event) bool
 
-func (p PredicateFunc[T]) Test(t T) bool {
-	return p(t)
+func (p PredicateFunc) Test(e Event) bool {
+	return p(e)
 }
 
-func (p PredicateFunc[T]) Equals(other PredicateFunc[T]) bool {
+func (p PredicateFunc) Equals(other PredicateFunc) bool {
 	return reflect.ValueOf(p).Pointer() == reflect.ValueOf(other).Pointer()
 }
 
 func IsAlwaysTrue(p Predicate[Event]) bool {
-	if pf, ok := p.(PredicateFunc[Event]); ok {
-		return pf.Equals(AlwaysTrue.(PredicateFunc[Event]))
+	if pf, ok := p.(PredicateFunc); ok {
+		return pf.Equals(AlwaysTrue.(PredicateFunc))
 	}
 	return false
 }
 
 func IsAlwaysFalse(p Predicate[Event]) bool {
-	if pf, ok := p.(PredicateFunc[Event]); ok {
-		return pf.Equals(AlwaysFalse.(PredicateFunc[Event]))
+	if pf, ok := p.(PredicateFunc); ok {
+		return pf.Equals(AlwaysFalse.(PredicateFunc))
 	}
 	return false
 }

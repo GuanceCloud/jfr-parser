@@ -9,46 +9,46 @@ import (
 )
 
 var types = map[types2.FieldClass]func() ParseResolvable{
-	types2.Boolean:              NewParseResolvable[*Boolean],
-	types2.Byte:                 NewParseResolvable[*Byte],
-	types2.Char:                 NewParseResolvable[*Char],
-	types2.Double:               NewParseResolvable[*Double],
-	types2.Float:                NewParseResolvable[*Float],
-	types2.Int:                  NewParseResolvable[*Int],
-	types2.Long:                 NewParseResolvable[*Long],
-	types2.Short:                NewParseResolvable[*Short],
-	types2.Class:                NewParseResolvable[*Class],
-	types2.String:               NewParseResolvable[*String],
-	types2.Thread:               NewParseResolvable[*Thread],
-	types2.ClassLoader:          NewParseResolvable[*ClassLoader],
-	types2.CodeBlobType:         NewParseResolvable[*CodeBlobType],
-	types2.FlagValueOrigin:      NewParseResolvable[*FlagValueOrigin],
-	types2.FrameType:            NewParseResolvable[*FrameType],
-	types2.G1YCType:             NewParseResolvable[*G1YCType],
-	types2.GCName:               NewParseResolvable[*GCName],
-	types2.Method:               NewParseResolvable[*Method],
-	types2.Module:               NewParseResolvable[*Module],
-	types2.NarrowOopMode:        NewParseResolvable[*NarrowOopMode],
-	types2.NetworkInterfaceName: NewParseResolvable[*NetworkInterfaceName],
-	types2.Package:              NewParseResolvable[*Package],
-	types2.StackFrame:           NewParseResolvable[*StackFrame],
-	types2.StackTrace:           NewParseResolvable[*StackTrace],
-	types2.Symbol:               NewParseResolvable[*Symbol],
-	types2.ThreadState:          NewParseResolvable[*ThreadState],
-	types2.InflateCause:         NewParseResolvable[*InflateCause],
-	types2.GCCause:              NewParseResolvable[*GCCause],
-	types2.CompilerPhaseType:    NewParseResolvable[*CompilerPhaseType],
-	types2.ThreadGroup:          NewParseResolvable[*ThreadGroup],
-	types2.GCThresholdUpdater:   NewParseResolvable[*GCThresholdUpdater],
-	types2.MetaspaceObjectType:  NewParseResolvable[*MetaspaceObjectType],
-	types2.ExecutionMode:        NewParseResolvable[*ExecutionMode],
-	types2.VMOperationType:      NewParseResolvable[*VMOperationType],
-	types2.G1HeapRegionType:     NewParseResolvable[*G1HeapRegionType],
-	types2.GCWhen:               NewParseResolvable[*GCWhen],
-	types2.ReferenceType:        NewParseResolvable[*ReferenceType],
-	types2.MetadataType:         NewParseResolvable[*MetadataType],
-	types2.LogLevel:             NewParseResolvable[*LogLevel],
-	types2.AttributeValue:       NewParseResolvable[*AttributeValue],
+	types2.Boolean:              func() ParseResolvable { return SetPfFunc(new(Boolean)) },
+	types2.Byte:                 func() ParseResolvable { return SetPfFunc(new(Byte)) },
+	types2.Char:                 func() ParseResolvable { return SetPfFunc(new(Char)) },
+	types2.Double:               func() ParseResolvable { return SetPfFunc(new(Double)) },
+	types2.Float:                func() ParseResolvable { return SetPfFunc(new(Float)) },
+	types2.Int:                  func() ParseResolvable { return SetPfFunc(new(Int)) },
+	types2.Long:                 func() ParseResolvable { return SetPfFunc(new(Long)) },
+	types2.Short:                func() ParseResolvable { return SetPfFunc(new(Short)) },
+	types2.Class:                func() ParseResolvable { return SetPfFunc(new(Class)) },
+	types2.String:               func() ParseResolvable { return SetPfFunc(new(String)) },
+	types2.Thread:               func() ParseResolvable { return SetPfFunc(new(Thread)) },
+	types2.ClassLoader:          func() ParseResolvable { return SetPfFunc(new(ClassLoader)) },
+	types2.CodeBlobType:         func() ParseResolvable { return SetPfFunc(new(CodeBlobType)) },
+	types2.FlagValueOrigin:      func() ParseResolvable { return SetPfFunc(new(FlagValueOrigin)) },
+	types2.FrameType:            func() ParseResolvable { return SetPfFunc(new(FrameType)) },
+	types2.G1YCType:             func() ParseResolvable { return SetPfFunc(new(G1YCType)) },
+	types2.GCName:               func() ParseResolvable { return SetPfFunc(new(GCName)) },
+	types2.Method:               func() ParseResolvable { return SetPfFunc(new(Method)) },
+	types2.Module:               func() ParseResolvable { return SetPfFunc(new(Module)) },
+	types2.NarrowOopMode:        func() ParseResolvable { return SetPfFunc(new(NarrowOopMode)) },
+	types2.NetworkInterfaceName: func() ParseResolvable { return SetPfFunc(new(NetworkInterfaceName)) },
+	types2.Package:              func() ParseResolvable { return SetPfFunc(new(Package)) },
+	types2.StackFrame:           func() ParseResolvable { return SetPfFunc(new(StackFrame)) },
+	types2.StackTrace:           func() ParseResolvable { return SetPfFunc(new(StackTrace)) },
+	types2.Symbol:               func() ParseResolvable { return SetPfFunc(new(Symbol)) },
+	types2.ThreadState:          func() ParseResolvable { return SetPfFunc(new(ThreadState)) },
+	types2.InflateCause:         func() ParseResolvable { return SetPfFunc(new(InflateCause)) },
+	types2.GCCause:              func() ParseResolvable { return SetPfFunc(new(GCCause)) },
+	types2.CompilerPhaseType:    func() ParseResolvable { return SetPfFunc(new(CompilerPhaseType)) },
+	types2.ThreadGroup:          func() ParseResolvable { return SetPfFunc(new(ThreadGroup)) },
+	types2.GCThresholdUpdater:   func() ParseResolvable { return SetPfFunc(new(GCThresholdUpdater)) },
+	types2.MetaspaceObjectType:  func() ParseResolvable { return SetPfFunc(new(MetaspaceObjectType)) },
+	types2.ExecutionMode:        func() ParseResolvable { return SetPfFunc(new(ExecutionMode)) },
+	types2.VMOperationType:      func() ParseResolvable { return SetPfFunc(new(VMOperationType)) },
+	types2.G1HeapRegionType:     func() ParseResolvable { return SetPfFunc(new(G1HeapRegionType)) },
+	types2.GCWhen:               func() ParseResolvable { return SetPfFunc(new(GCWhen)) },
+	types2.ReferenceType:        func() ParseResolvable { return SetPfFunc(new(ReferenceType)) },
+	types2.MetadataType:         func() ParseResolvable { return SetPfFunc(new(MetadataType)) },
+	types2.LogLevel:             func() ParseResolvable { return SetPfFunc(new(LogLevel)) },
+	types2.AttributeValue:       func() ParseResolvable { return SetPfFunc(new(AttributeValue)) },
 }
 
 var (
@@ -150,6 +150,15 @@ type BaseStructType struct {
 	resolved    bool
 	fieldAssign ParseFieldFunc
 	unresolved  []ParseResolvable
+}
+
+func SetPfFunc(p ParseResolvable) ParseResolvable {
+	if setter, ok := p.(parseFieldFuncSetter); ok {
+		if pf, yes := p.(setFielder); yes {
+			setter.setParseFieldFunc(pf.setField)
+		}
+	}
+	return p
 }
 
 func NewParseResolvable[T ParseResolvable]() ParseResolvable {

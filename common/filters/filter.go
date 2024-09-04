@@ -139,9 +139,9 @@ func (e EventFilterFunc) GetPredicate(metadata *parser.ClassMetadata) parser.Pre
 	return e(metadata)
 }
 
-type AndPredicate[T any] []parser.PredicateFunc[T]
+type AndPredicate []parser.PredicateFunc
 
-func (a AndPredicate[T]) Test(t T) bool {
+func (a AndPredicate) Test(t parser.Event) bool {
 	for _, fn := range a {
 		if !fn(t) {
 			return false
@@ -150,9 +150,9 @@ func (a AndPredicate[T]) Test(t T) bool {
 	return true
 }
 
-type OrPredicate[T any] []parser.PredicateFunc[T]
+type OrPredicate []parser.PredicateFunc
 
-func (o OrPredicate[T]) Test(t T) bool {
+func (o OrPredicate) Test(t parser.Event) bool {
 	for _, fn := range o {
 		if fn(t) {
 			return true
@@ -161,30 +161,30 @@ func (o OrPredicate[T]) Test(t T) bool {
 	return false
 }
 
-type NotPredicate[T any] parser.PredicateFunc[T]
+type NotPredicate parser.PredicateFunc
 
-func (n NotPredicate[T]) Test(t T) bool {
+func (n NotPredicate) Test(t parser.Event) bool {
 	return !n(t)
 }
 
-func And[T any](p ...parser.Predicate[T]) parser.Predicate[T] {
-	ap := make(AndPredicate[T], 0, len(p))
+func And(p ...parser.Predicate[parser.Event]) parser.Predicate[parser.Event] {
+	ap := make(AndPredicate, 0, len(p))
 	for _, pp := range p {
 		ap = append(ap, pp.Test)
 	}
 	return ap
 }
 
-func Or[T any](p ...parser.Predicate[T]) parser.Predicate[T] {
-	op := make(OrPredicate[T], 0, len(p))
+func Or(p ...parser.Predicate[parser.Event]) parser.Predicate[parser.Event] {
+	op := make(OrPredicate, 0, len(p))
 	for _, pp := range p {
 		op = append(op, pp.Test)
 	}
 	return op
 }
 
-func Not[T any](p parser.Predicate[T]) parser.Predicate[T] {
-	return NotPredicate[T](p.Test)
+func Not(p parser.Predicate[parser.Event]) parser.Predicate[parser.Event] {
+	return NotPredicate(p.Test)
 }
 
 func AndAlways(p ...parser.Predicate[parser.Event]) parser.Predicate[parser.Event] {
@@ -273,7 +273,7 @@ func AttributeEqual[T comparable](attr *attributes.Attribute[T], target T) parse
 			return parser.AlwaysFalse
 		}
 
-		return parser.PredicateFunc[parser.Event](func(e parser.Event) bool {
+		return parser.PredicateFunc(func(e parser.Event) bool {
 			value, err := attr.GetValue(e.(*parser.GenericEvent))
 			if err != nil {
 				return false
@@ -302,7 +302,7 @@ func MethodFilter(typeName, method string) parser.EventFilter {
 	return EventFilterFunc(func(metadata *parser.ClassMetadata) parser.Predicate[parser.Event] {
 		methodFilter := EventFilterFunc(func(metadata *parser.ClassMetadata) parser.Predicate[parser.Event] {
 
-			return parser.PredicateFunc[parser.Event](func(e parser.Event) bool {
+			return parser.PredicateFunc(func(e parser.Event) bool {
 				stacktrace, err := attributes.EventStacktrace.GetValue(e.(*parser.GenericEvent))
 				if err != nil {
 					return false
@@ -358,7 +358,7 @@ func NotNull[T any](attr *attributes.Attribute[T]) parser.EventFilter {
 			return parser.AlwaysFalse
 		}
 
-		return parser.PredicateFunc[parser.Event](func(e parser.Event) bool {
+		return parser.PredicateFunc(func(e parser.Event) bool {
 			value, err := attr.GetValue(e.(*parser.GenericEvent))
 			if err != nil {
 				return false

@@ -4,59 +4,15 @@ import (
 	"github.com/grafana/jfr-parser/common/attributes"
 	"github.com/grafana/jfr-parser/parser"
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 )
 
-type User struct {
-	Name  string
-	Age   int
-	Score int
-}
-
-func isAdult(user *User) bool {
-	return user.Age >= 18
-}
-
-func hasLastName(user *User) bool {
-	return len(strings.Split(user.Name, " ")) >= 2
-}
-
-func excellent(u *User) bool {
-	return u.Score >= 95
-}
-
-func TestAnd(t *testing.T) {
-	a := parser.PredicateFunc[*User](isAdult)
-	l := parser.PredicateFunc[*User](hasLastName)
-	e := parser.PredicateFunc[*User](excellent)
-
-	ap := And[*User](a, l, e)
-
-	assert.True(t, ap.Test(&User{Name: "Mary William", Age: 19, Score: 99}))
-	assert.False(t, ap.Test(&User{Name: "Tom Crux", Age: 19}))
-
-	op := Or[*User](a, l, e)
-
-	assert.True(t, op.Test(&User{
-		Age:   17,
-		Name:  "Jerry",
-		Score: 99,
-	}))
-
-	assert.False(t, op.Test(&User{
-		Age:   17,
-		Name:  "Jerry",
-		Score: 60,
-	}))
-}
-
 func TestIsAlwaysTrue(t *testing.T) {
-	var a, b parser.PredicateFunc[parser.Event]
+	var a, b parser.PredicateFunc
 	assert.True(t, a.Equals(b))
 
-	var c = parser.AlwaysTrue.(parser.PredicateFunc[parser.Event])
-	var d = parser.PredicateFunc[parser.Event](parser.TrueFn[parser.Event])
+	var c = parser.AlwaysTrue.(parser.PredicateFunc)
+	var d = parser.PredicateFunc(parser.TrueFn)
 
 	assert.True(t, c.Equals(d))
 
@@ -69,12 +25,12 @@ func TestIsAlwaysTrue(t *testing.T) {
 }
 
 func TestAndAlways(t *testing.T) {
-	var a parser.Predicate[parser.Event] = parser.PredicateFunc[parser.Event](func(ge parser.Event) bool {
+	var a parser.Predicate[parser.Event] = parser.PredicateFunc(func(ge parser.Event) bool {
 		_, ok := ge.(*parser.GenericEvent)
 		return ok
 	})
 
-	var isNil parser.Predicate[parser.Event] = parser.PredicateFunc[parser.Event](func(e parser.Event) bool {
+	var isNil parser.Predicate[parser.Event] = parser.PredicateFunc(func(e parser.Event) bool {
 		return e == nil
 	})
 
