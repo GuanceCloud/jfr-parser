@@ -5,8 +5,8 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/GuanceCloud/zipstream"
 	"github.com/pierrec/lz4/v4"
-	"github.com/zhyee/zipstream"
 	"io"
 )
 
