@@ -1,5 +1,5 @@
-github.com/GuanceCloud/jfr-parser v0.10.1-ext h1:d7PXmVhPyQNGBI6zM8i7GsWVdWFDZH+lR/2DE8Q94mA=
-github.com/GuanceCloud/jfr-parser v0.10.1-ext/go.mod h1:Xz9t1/y+MgUwHSWBSHivGfm8rgjXNOrXmdt4kJIrM8I=
+github.com/GuanceCloud/jfr-parser v0.10.2-ext h1:aNfzr8Xx91/gug3BMza6DmBHbLax8VGbhQbiiLMk2ak=
+github.com/GuanceCloud/jfr-parser v0.10.2-ext/go.mod h1:Xz9t1/y+MgUwHSWBSHivGfm8rgjXNOrXmdt4kJIrM8I=
 github.com/GuanceCloud/zipstream v0.1.0 h1:RToNErercYk7y/nmyvshjN0Zt12lFNg2BpLh3YXXSNY=
 github.com/GuanceCloud/zipstream v0.1.0/go.mod h1:d5rjEl0N0ucmRRvrfX1+9JtsZZMYt5sWg9AR6pyTkCM=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
