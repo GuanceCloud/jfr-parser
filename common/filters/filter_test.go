@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"github.com/grafana/jfr-parser/common/attributes"
-	"github.com/grafana/jfr-parser/parser"
 	"github.com/stretchr/testify/assert"
+	"jfr-parser/common/attributes"
+	"jfr-parser/parser"
 	"testing"
 )
 

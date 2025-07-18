@@ -1,18 +1,20 @@
 package pprof
 
 import (
-	"github.com/grafana/jfr-parser/parser"
-	"github.com/grafana/jfr-parser/parser/types"
+	"jfr-parser/parser"
+	"jfr-parser/parser/types"
 )
 
 const (
-	sampleTypeCPU        = 0
-	sampleTypeWall       = 1
-	sampleTypeInTLAB     = 2
-	sampleTypeOutTLAB    = 3
-	sampleTypeLock       = 4
-	sampleTypeThreadPark = 5
-	sampleTypeLiveObject = 6
+	sampleTypeCPU         = 0
+	sampleTypeWall        = 1
+	sampleTypeInTLAB      = 2
+	sampleTypeOutTLAB     = 3
+	sampleTypeLock        = 4
+	sampleTypeThreadPark  = 5
+	sampleTypeLiveObject  = 6
+	sampleTypeAllocSample = 7
+	sampleTypeMalloc      = 8
 )
 
 func newJfrPprofBuilders(p *parser.Parser, jfrLabels *LabelsSnapshot, piOriginal *ParseInput) *jfrPprofBuilders {
@@ -45,7 +47,7 @@ type jfrPprofBuilders struct {
 	period        int64
 }
 
-func (b *jfrPprofBuilders) addStacktrace(sampleType int64, contextID uint64, ref types.StackTraceRef, values []int64) {
+func (b *jfrPprofBuilders) addStacktrace(sampleType int64, correlation StacktraceCorrelation, ref types.StackTraceRef, values []int64) {
 	p := b.profileBuilderForSampleType(sampleType)
 	st := b.parser.GetStacktrace(ref)
 	if st == nil {
@@ -62,7 +64,7 @@ func (b *jfrPprofBuilders) addStacktrace(sampleType int64, contextID uint64, ref
 		}
 	}
 
-	sample := p.FindExternalSampleWithLabels(uint64(ref), contextID)
+	sample := p.FindExternalSampleWithLabels(uint64(ref), correlation)
 	if sample != nil {
 		addValues(sample.Value)
 		return
@@ -104,7 +106,7 @@ func (b *jfrPprofBuilders) addStacktrace(sampleType int64, contextID uint64, ref
 	}
 	vs := make([]int64, len(values))
 	addValues(vs)
-	p.AddExternalSampleWithLabels(locations, vs, b.contextLabels(contextID), b.jfrLabels, uint64(ref), contextID)
+	p.AddExternalSampleWithLabels(locations, vs, b.contextLabels(correlation.ContextId), b.jfrLabels, uint64(ref), correlation)
 }
 
 func (b *jfrPprofBuilders) profileBuilderForSampleType(sampleType int64) *ProfileBuilder {
@@ -146,6 +148,15 @@ func (b *jfrPprofBuilders) profileBuilderForSampleType(sampleType int64) *Profil
 	case sampleTypeLiveObject:
 		builder.AddSampleType("live", "count")
 		builder.PeriodType("objects", "count")
+		metric = "memory"
+	case sampleTypeAllocSample:
+		builder.AddSampleType("alloc_sample_objects", "count")
+		builder.AddSampleType("alloc_sample_bytes", "bytes")
+		builder.PeriodType("space", "bytes")
+		metric = "memory"
+	case sampleTypeMalloc:
+		builder.AddSampleType("malloc_objects", "count")
+		builder.AddSampleType("malloc_bytes", "bytes")
 		metric = "memory"
 	}
 	builder.MetricName(metric)

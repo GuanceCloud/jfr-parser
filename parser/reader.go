@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	reader2 "github.com/grafana/jfr-parser/reader"
+	reader2 "jfr-parser/reader"
 )
 
 const (

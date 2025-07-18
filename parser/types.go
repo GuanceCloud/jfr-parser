@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	types2 "github.com/grafana/jfr-parser/common/types"
+	types2 "jfr-parser/common/types"
 )
 
 var types = map[types2.FieldClass]func() ParseResolvable{

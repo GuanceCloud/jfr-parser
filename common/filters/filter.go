@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"github.com/grafana/jfr-parser/common/attributes"
-	"github.com/grafana/jfr-parser/common/types"
-	"github.com/grafana/jfr-parser/parser"
+	"jfr-parser/common/attributes"
+	"jfr-parser/common/types"
+	"jfr-parser/parser"
 	"reflect"
 )
 

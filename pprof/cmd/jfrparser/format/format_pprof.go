@@ -5,16 +5,16 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/grafana/jfr-parser/pprof"
+	"jfr-parser/pprof"
 )
 
-type formatterPprof struct{}
+type FormatterPprof struct{}
 
-func NewFormatterPprof() *formatterPprof {
-	return &formatterPprof{}
+func NewFormatterPprof() *FormatterPprof {
+	return &FormatterPprof{}
 }
 
-func (f *formatterPprof) Format(buf []byte, dest string) ([]string, [][]byte, error) {
+func (f *FormatterPprof) Format(buf []byte, dest string) ([]string, [][]byte, error) {
 	pi := &pprof.ParseInput{
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
@@ -30,7 +30,7 @@ func (f *formatterPprof) Format(buf []byte, dest string) ([]string, [][]byte, er
 	destDir := filepath.Dir(dest)
 	destBase := filepath.Base(dest)
 	for i := 0; i < len(profiles.Profiles); i++ {
-		filename := fmt.Sprintf("%s.%s", profiles.Profiles[i].Metric, destBase)
+		filename := fmt.Sprintf("%s.%d.%s", profiles.Profiles[i].Metric, i, destBase)
 		dests = append(dests, filepath.Join(destDir, filename))
 
 		bs, err := profiles.Profiles[i].Profile.MarshalVT()

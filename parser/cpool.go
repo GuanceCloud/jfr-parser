@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	gtypes "github.com/grafana/jfr-parser/parser/types"
-	"github.com/grafana/jfr-parser/parser/types/def"
+	gtypes "jfr-parser/parser/types"
+	"jfr-parser/parser/types/def"
 )
 
 func (p *Parser) readConstantPool(pos int) error {
@@ -117,6 +117,10 @@ func (p *Parser) readConstants(c *def.Class) error {
 		return err
 	case "jdk.types.StackTrace":
 		o, err := p.Stacktrace.Parse(p.buf[p.pos:], p.bindStackTrace, p.bindStackFrame, &p.TypeMap)
+		p.pos += o
+		return err
+	case "java.lang.String":
+		o, err := p.Strings.Parse(p.buf[p.pos:], p.bindString, &p.TypeMap)
 		p.pos += o
 		return err
 	default:

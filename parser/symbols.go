@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	ptypes "github.com/grafana/jfr-parser/parser/types"
+	ptypes "jfr-parser/parser/types"
 )
 
 // jdk/internal/reflect/GeneratedMethodAccessor31

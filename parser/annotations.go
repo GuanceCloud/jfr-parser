@@ -1,10 +1,10 @@
 package parser
 
 import (
-	"github.com/grafana/jfr-parser/common/units"
+	"jfr-parser/common/units"
 	"strconv"
 
-	"github.com/grafana/jfr-parser/internal/utils"
+	"jfr-parser/internal/utils"
 )
 
 const (

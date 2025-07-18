@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/grafana/jfr-parser/parser"
+	"jfr-parser/parser"
 )
 
 func main() {

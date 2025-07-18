@@ -2,9 +2,9 @@ package attributes
 
 import (
 	"fmt"
-	"github.com/grafana/jfr-parser/common/types"
-	"github.com/grafana/jfr-parser/common/units"
-	"github.com/grafana/jfr-parser/parser"
+	"jfr-parser/common/types"
+	"jfr-parser/common/units"
+	"jfr-parser/parser"
 	"reflect"
 )
 

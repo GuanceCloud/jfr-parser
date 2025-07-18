@@ -1,7 +1,7 @@
 package parser
 
 import (
-	types2 "github.com/grafana/jfr-parser/common/types"
+	types2 "jfr-parser/common/types"
 	"testing"
 )
 

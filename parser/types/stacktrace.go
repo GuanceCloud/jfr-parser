@@ -4,7 +4,7 @@ package types
 
 import (
 	"fmt"
-	"github.com/grafana/jfr-parser/parser/types/def"
+	"jfr-parser/parser/types/def"
 	"io"
 	"unsafe"
 )
@@ -44,7 +44,7 @@ func NewBindStackTrace(typ *def.Class, typeMap *def.TypeMap) *BindStackTrace {
 	return res
 }
 
-type StackTraceRef uint32
+type StackTraceRef uint64
 type StackTraceList struct {
 	IDMap      map[StackTraceRef]uint32
 	StackTrace []StackTrace
@@ -86,22 +86,24 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 	this.IDMap = make(map[StackTraceRef]uint32, n)
 	this.StackTrace = make([]StackTrace, n)
 	for i := 0; i < n; i++ {
-		v32_ = uint32(0)
-		for shift = uint(0); ; shift += 7 {
-			if shift >= 32 {
-				return 0, def.ErrIntOverflow
-			}
+		v64_ = 0
+		for shift = uint(0); shift <= 56; shift += 7 {
 			if pos >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
 			b_ = data[pos]
 			pos++
-			v32_ |= uint32(b_&0x7F) << shift
-			if b_ < 0x80 {
+			if shift == 56 {
+				v64_ |= uint64(b_&0xFF) << shift
 				break
+			} else {
+				v64_ |= uint64(b_&0x7F) << shift
+				if b_ < 0x80 {
+					break
+				}
 			}
 		}
-		id := StackTraceRef(v32_)
+		id := StackTraceRef(v64_)
 		for bindFieldIndex := 0; bindFieldIndex < len(bind.Fields); bindFieldIndex++ {
 			bindArraySize := 1
 			if bind.Fields[bindFieldIndex].Field.Array {
@@ -127,19 +129,21 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 			}
 			for bindArrayIndex := 0; bindArrayIndex < bindArraySize; bindArrayIndex++ {
 				if bind.Fields[bindFieldIndex].Field.ConstantPool {
-					v32_ = uint32(0)
-					for shift = uint(0); ; shift += 7 {
-						if shift >= 32 {
-							return 0, def.ErrIntOverflow
-						}
+					v64_ = 0
+					for shift = uint(0); shift <= 56; shift += 7 {
 						if pos >= l {
 							return 0, io.ErrUnexpectedEOF
 						}
 						b_ = data[pos]
 						pos++
-						v32_ |= uint32(b_&0x7F) << shift
-						if b_ < 0x80 {
+						if shift == 56 {
+							v64_ |= uint64(b_&0xFF) << shift
 							break
+						} else {
+							v64_ |= uint64(b_&0x7F) << shift
+							if b_ < 0x80 {
+								break
+							}
 						}
 					}
 				} else {
@@ -179,6 +183,66 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 							bs := data[pos : pos+int(v32_)]
 							s_ = *(*string)(unsafe.Pointer(&bs))
 							pos += int(v32_)
+						case 5:
+							v32_ = uint32(0)
+							for shift = uint(0); ; shift += 7 {
+								if shift >= 32 {
+									return 0, def.ErrIntOverflow
+								}
+								if pos >= l {
+									return 0, io.ErrUnexpectedEOF
+								}
+								b_ = data[pos]
+								pos++
+								v32_ |= uint32(b_&0x7F) << shift
+								if b_ < 0x80 {
+									break
+								}
+							}
+							if pos+int(v32_) > l {
+								return 0, io.ErrUnexpectedEOF
+							}
+							bs := data[pos : pos+int(v32_)]
+							bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+							s_ = *(*string)(unsafe.Pointer(&bs))
+							pos += int(v32_)
+						case 4:
+							v32_ = uint32(0)
+							for shift = uint(0); ; shift += 7 {
+								if shift >= 32 {
+									return 0, def.ErrIntOverflow
+								}
+								if pos >= l {
+									return 0, io.ErrUnexpectedEOF
+								}
+								b_ = data[pos]
+								pos++
+								v32_ |= uint32(b_&0x7F) << shift
+								if b_ < 0x80 {
+									break
+								}
+							}
+							bl := int(v32_)
+							buf := make([]rune, bl)
+							for i := 0; i < bl; i++ {
+								v32_ = uint32(0)
+								for shift = uint(0); ; shift += 7 {
+									if shift >= 32 {
+										return 0, def.ErrIntOverflow
+									}
+									if pos >= l {
+										return 0, io.ErrUnexpectedEOF
+									}
+									b_ = data[pos]
+									pos++
+									v32_ |= uint32(b_&0x7F) << shift
+									if b_ < 0x80 {
+										break
+									}
+								}
+								buf[i] = rune(v32_)
+							}
+							s_ = string(buf)
 						default:
 							return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 						}
@@ -268,29 +332,31 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 							}
 							for bindStackFrameArrayIndex := 0; bindStackFrameArrayIndex < bindStackFrameArraySize; bindStackFrameArrayIndex++ {
 								if bindStackFrame.Fields[bindStackFrameFieldIndex].Field.ConstantPool {
-									v32_ = uint32(0)
-									for shift = uint(0); ; shift += 7 {
-										if shift >= 32 {
-											return 0, def.ErrIntOverflow
-										}
+									v64_ = 0
+									for shift = uint(0); shift <= 56; shift += 7 {
 										if pos >= l {
 											return 0, io.ErrUnexpectedEOF
 										}
 										b_ = data[pos]
 										pos++
-										v32_ |= uint32(b_&0x7F) << shift
-										if b_ < 0x80 {
+										if shift == 56 {
+											v64_ |= uint64(b_&0xFF) << shift
 											break
+										} else {
+											v64_ |= uint64(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
 										}
 									}
 									switch bindStackFrame.Fields[bindStackFrameFieldIndex].Field.Type {
 									case typeMap.T_METHOD:
 										if bindStackFrame.Fields[bindStackFrameFieldIndex].MethodRef != nil {
-											*bindStackFrame.Fields[bindStackFrameFieldIndex].MethodRef = MethodRef(v32_)
+											*bindStackFrame.Fields[bindStackFrameFieldIndex].MethodRef = MethodRef(v64_)
 										}
 									case typeMap.T_FRAME_TYPE:
 										if bindStackFrame.Fields[bindStackFrameFieldIndex].FrameTypeRef != nil {
-											*bindStackFrame.Fields[bindStackFrameFieldIndex].FrameTypeRef = FrameTypeRef(v32_)
+											*bindStackFrame.Fields[bindStackFrameFieldIndex].FrameTypeRef = FrameTypeRef(v64_)
 										}
 									}
 								} else {
@@ -330,6 +396,66 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 											bs := data[pos : pos+int(v32_)]
 											s_ = *(*string)(unsafe.Pointer(&bs))
 											pos += int(v32_)
+										case 5:
+											v32_ = uint32(0)
+											for shift = uint(0); ; shift += 7 {
+												if shift >= 32 {
+													return 0, def.ErrIntOverflow
+												}
+												if pos >= l {
+													return 0, io.ErrUnexpectedEOF
+												}
+												b_ = data[pos]
+												pos++
+												v32_ |= uint32(b_&0x7F) << shift
+												if b_ < 0x80 {
+													break
+												}
+											}
+											if pos+int(v32_) > l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											bs := data[pos : pos+int(v32_)]
+											bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+											s_ = *(*string)(unsafe.Pointer(&bs))
+											pos += int(v32_)
+										case 4:
+											v32_ = uint32(0)
+											for shift = uint(0); ; shift += 7 {
+												if shift >= 32 {
+													return 0, def.ErrIntOverflow
+												}
+												if pos >= l {
+													return 0, io.ErrUnexpectedEOF
+												}
+												b_ = data[pos]
+												pos++
+												v32_ |= uint32(b_&0x7F) << shift
+												if b_ < 0x80 {
+													break
+												}
+											}
+											bl := int(v32_)
+											buf := make([]rune, bl)
+											for i := 0; i < bl; i++ {
+												v32_ = uint32(0)
+												for shift = uint(0); ; shift += 7 {
+													if shift >= 32 {
+														return 0, def.ErrIntOverflow
+													}
+													if pos >= l {
+														return 0, io.ErrUnexpectedEOF
+													}
+													b_ = data[pos]
+													pos++
+													v32_ |= uint32(b_&0x7F) << shift
+													if b_ < 0x80 {
+														break
+													}
+												}
+												buf[i] = rune(v32_)
+											}
+											s_ = string(buf)
 										default:
 											return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 										}
@@ -473,6 +599,66 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 														bs := data[pos : pos+int(v32_)]
 														s_ = *(*string)(unsafe.Pointer(&bs))
 														pos += int(v32_)
+													case 5:
+														v32_ = uint32(0)
+														for shift = uint(0); ; shift += 7 {
+															if shift >= 32 {
+																return 0, def.ErrIntOverflow
+															}
+															if pos >= l {
+																return 0, io.ErrUnexpectedEOF
+															}
+															b_ = data[pos]
+															pos++
+															v32_ |= uint32(b_&0x7F) << shift
+															if b_ < 0x80 {
+																break
+															}
+														}
+														if pos+int(v32_) > l {
+															return 0, io.ErrUnexpectedEOF
+														}
+														bs := data[pos : pos+int(v32_)]
+														bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+														s_ = *(*string)(unsafe.Pointer(&bs))
+														pos += int(v32_)
+													case 4:
+														v32_ = uint32(0)
+														for shift = uint(0); ; shift += 7 {
+															if shift >= 32 {
+																return 0, def.ErrIntOverflow
+															}
+															if pos >= l {
+																return 0, io.ErrUnexpectedEOF
+															}
+															b_ = data[pos]
+															pos++
+															v32_ |= uint32(b_&0x7F) << shift
+															if b_ < 0x80 {
+																break
+															}
+														}
+														bl := int(v32_)
+														buf := make([]rune, bl)
+														for i := 0; i < bl; i++ {
+															v32_ = uint32(0)
+															for shift = uint(0); ; shift += 7 {
+																if shift >= 32 {
+																	return 0, def.ErrIntOverflow
+																}
+																if pos >= l {
+																	return 0, io.ErrUnexpectedEOF
+																}
+																b_ = data[pos]
+																pos++
+																v32_ |= uint32(b_&0x7F) << shift
+																if b_ < 0x80 {
+																	break
+																}
+															}
+															buf[i] = rune(v32_)
+														}
+														s_ = string(buf)
 													default:
 														return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 													}
@@ -621,6 +807,66 @@ func (this *StackTraceList) Parse(data []byte, bind *BindStackTrace, bindStackFr
 										bs := data[pos : pos+int(v32_)]
 										s_ = *(*string)(unsafe.Pointer(&bs))
 										pos += int(v32_)
+									case 5:
+										v32_ = uint32(0)
+										for shift = uint(0); ; shift += 7 {
+											if shift >= 32 {
+												return 0, def.ErrIntOverflow
+											}
+											if pos >= l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											b_ = data[pos]
+											pos++
+											v32_ |= uint32(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
+										}
+										if pos+int(v32_) > l {
+											return 0, io.ErrUnexpectedEOF
+										}
+										bs := data[pos : pos+int(v32_)]
+										bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+										s_ = *(*string)(unsafe.Pointer(&bs))
+										pos += int(v32_)
+									case 4:
+										v32_ = uint32(0)
+										for shift = uint(0); ; shift += 7 {
+											if shift >= 32 {
+												return 0, def.ErrIntOverflow
+											}
+											if pos >= l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											b_ = data[pos]
+											pos++
+											v32_ |= uint32(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
+										}
+										bl := int(v32_)
+										buf := make([]rune, bl)
+										for i := 0; i < bl; i++ {
+											v32_ = uint32(0)
+											for shift = uint(0); ; shift += 7 {
+												if shift >= 32 {
+													return 0, def.ErrIntOverflow
+												}
+												if pos >= l {
+													return 0, io.ErrUnexpectedEOF
+												}
+												b_ = data[pos]
+												pos++
+												v32_ |= uint32(b_&0x7F) << shift
+												if b_ < 0x80 {
+													break
+												}
+											}
+											buf[i] = rune(v32_)
+										}
+										s_ = string(buf)
 									default:
 										return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 									}

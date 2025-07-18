@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/grafana/jfr-parser/parser/types/def"
+	"jfr-parser/parser/types/def"
 )
 
 var (
@@ -45,6 +45,9 @@ var (
 	T_NATIVE_LIBRARY          = def.TypeID(113)
 	T_LOG                     = def.TypeID(114)
 	T_LIVE_OBJECT             = def.TypeID(115)
+	T_WALL_CLOCK_SAMPLE       = def.TypeID(118)
+	T_MALLOC                  = def.TypeID(119)
+	T_FREE                    = def.TypeID(120)
 	T_ANNOTATION              = def.TypeID(200)
 	T_LABEL                   = def.TypeID(201)
 	T_CATEGORY                = def.TypeID(202)
@@ -54,6 +57,7 @@ var (
 	T_MEMORY_ADDRESS          = def.TypeID(206)
 	T_UNSIGNED                = def.TypeID(207)
 	T_PERCENTAGE              = def.TypeID(208)
+	T_ALLOC_SAMPLE            = def.TypeID(209)
 )
 
 func TypeID2Sym(id def.TypeID) string {
@@ -110,6 +114,8 @@ func TypeID2Sym(id def.TypeID) string {
 		return "T_ALLOC_IN_NEW_TLAB"
 	case T_ALLOC_OUTSIDE_TLAB:
 		return "T_ALLOC_OUTSIDE_TLAB"
+	case T_ALLOC_SAMPLE:
+		return "T_ALLOC_SAMPLE"
 	case T_MONITOR_ENTER:
 		return "T_MONITOR_ENTER"
 	case T_THREAD_PARK:
@@ -302,9 +308,24 @@ var Type_jdk_ExecutionSample = def.Class{
 		{Name: "sampledThread", Type: T_THREAD, ConstantPool: true},
 		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
 		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
 	},
 }
+
+var Type_profiler_WallClockSample = def.Class{
+	Name: "profiler.WallClockSample",
+	ID:   T_WALL_CLOCK_SAMPLE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "sampledThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		{Name: "samples", Type: T_INT, ConstantPool: false},
+	},
+}
+
 var Type_jdk_ObjectAllocationInNewTLAB = def.Class{
 	Name: "jdk.ObjectAllocationInNewTLAB",
 	ID:   T_ALLOC_IN_NEW_TLAB,
@@ -316,6 +337,8 @@ var Type_jdk_ObjectAllocationInNewTLAB = def.Class{
 		{Name: "allocationSize", Type: T_LONG, ConstantPool: false},
 		{Name: "tlabSize", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_ObjectAllocationOutsideTLAB = def.Class{
@@ -328,6 +351,19 @@ var Type_jdk_ObjectAllocationOutsideTLAB = def.Class{
 		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
 		{Name: "allocationSize", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
+	},
+}
+var Type_jdk_ObjectAllocationSample = def.Class{
+	Name: "jdk.ObjectAllocationSample",
+	ID:   T_ALLOC_SAMPLE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
+		{Name: "weight", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_JavaMonitorEnter = def.Class{
@@ -342,6 +378,8 @@ var Type_jdk_JavaMonitorEnter = def.Class{
 		{Name: "previousOwner", Type: T_THREAD, ConstantPool: true},
 		{Name: "address", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_ThreadPark = def.Class{
@@ -356,7 +394,6 @@ var Type_jdk_ThreadPark = def.Class{
 		{Name: "timeout", Type: T_LONG, ConstantPool: false},
 		{Name: "until", Type: T_LONG, ConstantPool: false},
 		{Name: "address", Type: T_LONG, ConstantPool: false},
-		{Name: "contextId", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_CPULoad = def.Class{
@@ -521,4 +558,27 @@ var Type_jdk_jfr_Percentage = def.Class{
 	Name:   "jdk.jfr.Percentage",
 	ID:     T_PERCENTAGE,
 	Fields: []def.Field{},
+}
+
+var Type_profiler_Malloc = def.Class{
+	Name: "profiler.Malloc",
+	ID:   T_MALLOC,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "address", Type: T_LONG, ConstantPool: false},
+		{Name: "size", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+var Type_profiler_Free = def.Class{
+	Name: "profiler.Free",
+	ID:   T_FREE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "address", Type: T_LONG, ConstantPool: false},
+	},
 }
