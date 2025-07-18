@@ -1,10 +1,11 @@
-module jfr-parser/pprof
+module github.com/GuanceCloud/jfr-parser/pprof
 
-go 1.18
+go 1.19
 
 require (
 	github.com/google/pprof v0.0.0-20240727154555-813a5fbdbec8
 	github.com/grafana/pyroscope/api v0.4.0
+	"github.com/GuanceCloud/jfr-parser" v0.10.0-ext
 	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.34.2

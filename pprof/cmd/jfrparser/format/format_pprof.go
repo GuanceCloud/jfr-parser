@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"jfr-parser/pprof"
+	"github.com/GuanceCloud/jfr-parser/pprof"
 )
 
 type FormatterPprof struct{}

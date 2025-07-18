@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"jfr-parser/parser"
+	"github.com/GuanceCloud/jfr-parser/parser"
 )
 
 func ParseJFR(body []byte, pi *ParseInput, jfrLabels *LabelsSnapshot) (res *Profiles, err error) {

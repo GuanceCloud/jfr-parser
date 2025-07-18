@@ -1,9 +1,9 @@
 package filters
 
 import (
+	"github.com/GuanceCloud/jfr-parser/common/attributes"
+	"github.com/GuanceCloud/jfr-parser/parser"
 	"github.com/stretchr/testify/assert"
-	"jfr-parser/common/attributes"
-	"jfr-parser/parser"
 	"testing"
 )
 

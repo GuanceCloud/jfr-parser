@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"jfr-parser/pprof/cmd/jfrparser/format"
+	"github.com/GuanceCloud/jfr-parser/pprof/cmd/jfrparser/format"
 	"os"
 )
 

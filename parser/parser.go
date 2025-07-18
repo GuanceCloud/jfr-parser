@@ -7,8 +7,8 @@ import (
 	"os"
 	"unsafe"
 
-	types2 "jfr-parser/parser/types"
-	"jfr-parser/parser/types/def"
+	types2 "github.com/GuanceCloud/jfr-parser/parser/types"
+	"github.com/GuanceCloud/jfr-parser/parser/types/def"
 )
 
 func ParseFile(p string) ([]*Chunk, error) {

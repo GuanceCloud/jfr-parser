@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	ptypes "jfr-parser/parser/types"
+	ptypes "github.com/GuanceCloud/jfr-parser/parser/types"
 )
 
 // jdk/internal/reflect/GeneratedMethodAccessor31

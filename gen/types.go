@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"jfr-parser/parser/types/def"
+	"github.com/GuanceCloud/jfr-parser/parser/types/def"
 )
 
 var (

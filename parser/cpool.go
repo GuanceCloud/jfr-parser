@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	gtypes "jfr-parser/parser/types"
-	"jfr-parser/parser/types/def"
+	gtypes "github.com/GuanceCloud/jfr-parser/parser/types"
+	"github.com/GuanceCloud/jfr-parser/parser/types/def"
 )
 
 func (p *Parser) readConstantPool(pos int) error {

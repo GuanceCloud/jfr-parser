@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	reader2 "jfr-parser/reader"
+	reader2 "github.com/GuanceCloud/jfr-parser/reader"
 )
 
 const (

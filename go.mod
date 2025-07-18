@@ -1,4 +1,4 @@
-module jfr-parser
+module github.com/GuanceCloud/jfr-parser
 
 go 1.21
 

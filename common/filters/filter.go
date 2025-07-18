@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"jfr-parser/common/attributes"
-	"jfr-parser/common/types"
-	"jfr-parser/parser"
+	"github.com/GuanceCloud/jfr-parser/common/attributes"
+	"github.com/GuanceCloud/jfr-parser/common/types"
+	"github.com/GuanceCloud/jfr-parser/parser"
 	"reflect"
 )
 

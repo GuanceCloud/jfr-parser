@@ -2,12 +2,12 @@ package parser
 
 import (
 	"fmt"
-	"jfr-parser/common/units"
-	"jfr-parser/internal/utils"
+	"github.com/GuanceCloud/jfr-parser/common/units"
+	"github.com/GuanceCloud/jfr-parser/internal/utils"
 	"strconv"
 
+	"github.com/GuanceCloud/jfr-parser/parser/types/def"
 	"golang.org/x/text/encoding/charmap"
-	"jfr-parser/parser/types/def"
 )
 
 type Element interface {

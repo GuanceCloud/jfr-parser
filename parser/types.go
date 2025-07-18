@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	types2 "jfr-parser/common/types"
+	types2 "github.com/GuanceCloud/jfr-parser/common/types"
 )
 
 var types = map[types2.FieldClass]func() ParseResolvable{

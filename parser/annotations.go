@@ -1,10 +1,10 @@
 package parser
 
 import (
-	"jfr-parser/common/units"
+	"github.com/GuanceCloud/jfr-parser/common/units"
 	"strconv"
 
-	"jfr-parser/internal/utils"
+	"github.com/GuanceCloud/jfr-parser/internal/utils"
 )
 
 const (

@@ -1,7 +1,7 @@
 package parser
 
 import (
-	types2 "jfr-parser/common/types"
+	types2 "github.com/GuanceCloud/jfr-parser/common/types"
 	"testing"
 )
 

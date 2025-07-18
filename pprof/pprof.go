@@ -1,8 +1,8 @@
 package pprof
 
 import (
-	"jfr-parser/parser"
-	"jfr-parser/parser/types"
+	"github.com/GuanceCloud/jfr-parser/parser"
+	"github.com/GuanceCloud/jfr-parser/parser/types"
 )
 
 const (

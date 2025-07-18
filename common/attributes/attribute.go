@@ -2,9 +2,9 @@ package attributes
 
 import (
 	"fmt"
-	"jfr-parser/common/types"
-	"jfr-parser/common/units"
-	"jfr-parser/parser"
+	"github.com/GuanceCloud/jfr-parser/common/types"
+	"github.com/GuanceCloud/jfr-parser/common/units"
+	"github.com/GuanceCloud/jfr-parser/parser"
 	"reflect"
 )
 
