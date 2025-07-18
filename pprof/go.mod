@@ -1,11 +1,11 @@
 module github.com/GuanceCloud/jfr-parser/pprof
 
-go 1.19
+go 1.21
 
 require (
+	github.com/GuanceCloud/jfr-parser v0.10.1-ext
 	github.com/google/pprof v0.0.0-20240727154555-813a5fbdbec8
 	github.com/grafana/pyroscope/api v0.4.0
-	"github.com/GuanceCloud/jfr-parser" v0.10.0-ext
 	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.34.2
@@ -17,6 +17,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
