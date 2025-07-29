@@ -95,6 +95,7 @@ type Parser struct {
 	ThreadPark                  types2.ThreadPark
 	LiveObject                  types2.LiveObject
 	ActiveSetting               types2.ActiveSetting
+	ObjectSample                types2.ObjectSample
 
 	header   ChunkHeader
 	options  Options
@@ -120,6 +121,7 @@ type Parser struct {
 	bindExecutionSample *types2.BindExecutionSample
 
 	bindAllocInNewTLAB   *types2.BindObjectAllocationInNewTLAB
+	bindObjectSample     *types2.BindObjectSample
 	bindAllocOutsideTLAB *types2.BindObjectAllocationOutsideTLAB
 	bindAllocSample      *types2.BindObjectAllocationSample
 	bindMonitorEnter     *types2.BindJavaMonitorEnter
@@ -165,7 +167,7 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 
 		ttyp := def.TypeID(typ)
 		switch ttyp {
-		case p.TypeMap.T_EXECUTION_SAMPLE:
+		case p.TypeMap.T_EXECUTION_SAMPLE, p.TypeMap.Datadog_ExecutionSample:
 			if p.bindExecutionSample == nil {
 				p.pos = pp + int(size) // skip
 				continue
@@ -274,6 +276,17 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			}
 			p.pos = pp + int(size)
 			return ttyp, nil
+		case p.TypeMap.T_ObjectSample:
+			if p.bindObjectSample == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.ObjectSample.Parse(p.buf[p.pos:], p.bindObjectSample, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
 
 		case p.TypeMap.T_ACTIVE_SETTING:
 			if p.bindActiveSetting == nil {
@@ -287,7 +300,7 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			p.pos = pp + int(size)
 			return ttyp, nil
 		default:
-			//fmt.Printf("skipping %s %v\n", def.TypeID2Sym(ttyp), ttyp)
+			fmt.Printf("skipping %d size:%d \n", ttyp, size)
 			p.pos = pp + int(size)
 		}
 	}
@@ -602,15 +615,24 @@ func (p *Parser) checkTypes() error {
 	typeExecutionSample := p.TypeMap.NameMap["jdk.ExecutionSample"]
 	typeWallClockSample := p.TypeMap.NameMap["profiler.WallClockSample"]
 	typeAllocInNewTLAB := p.TypeMap.NameMap["jdk.ObjectAllocationInNewTLAB"]
+	typeObjectSample := p.TypeMap.NameMap["datadog.ObjectSample"]
 	typeALlocOutsideTLAB := p.TypeMap.NameMap["jdk.ObjectAllocationOutsideTLAB"]
 	typeAllocSample := p.TypeMap.NameMap["jdk.ObjectAllocationSample"]
 	typeMonitorEnter := p.TypeMap.NameMap["jdk.JavaMonitorEnter"]
 	typeThreadPark := p.TypeMap.NameMap["jdk.ThreadPark"]
 	typeLiveObject := p.TypeMap.NameMap["profiler.LiveObject"]
 	typeActiveSetting := p.TypeMap.NameMap["jdk.ActiveSetting"]
+	typedataDatadogExecutionSample := p.TypeMap.NameMap["datadog.ExecutionSample"]
 
 	typeMalloc := p.TypeMap.NameMap["profiler.Malloc"]
 	typeFree := p.TypeMap.NameMap["profiler.Free"]
+
+	if typedataDatadogExecutionSample != nil {
+		p.TypeMap.Datadog_ExecutionSample = typedataDatadogExecutionSample.ID
+		p.bindExecutionSample = types2.NewBindExecutionSample(typedataDatadogExecutionSample, &p.TypeMap)
+	} else {
+		p.TypeMap.Datadog_ExecutionSample = -1
+	}
 
 	if typeExecutionSample != nil {
 		p.TypeMap.T_EXECUTION_SAMPLE = typeExecutionSample.ID
@@ -648,6 +670,11 @@ func (p *Parser) checkTypes() error {
 	} else {
 		p.TypeMap.T_ALLOC_IN_NEW_TLAB = -1
 		p.bindAllocInNewTLAB = nil
+	}
+
+	if typeObjectSample != nil {
+		p.TypeMap.T_ObjectSample = typeObjectSample.ID
+		p.bindObjectSample = types2.NewBindObjectSample(typeObjectSample, &p.TypeMap)
 	}
 
 	if typeALlocOutsideTLAB != nil {

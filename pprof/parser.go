@@ -8,11 +8,11 @@ import (
 )
 
 func ParseJFR(body []byte, pi *ParseInput, jfrLabels *LabelsSnapshot) (res *Profiles, err error) {
-	defer func() {
+	/*	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("jfr parser panic: %v", r)
 		}
-	}()
+	}()*/
 	p := parser.NewParser(body, parser.Options{
 		SymbolProcessor: parser.ProcessSymbols,
 	})
@@ -36,7 +36,8 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 		}
 
 		switch typ {
-		case parser.TypeMap.T_EXECUTION_SAMPLE:
+		case parser.TypeMap.T_EXECUTION_SAMPLE, parser.TypeMap.Datadog_ExecutionSample:
+			fmt.Printf("T_EXECUTION_SAMPLE Datadog_ExecutionSample %d \n", typ)
 			ts := parser.GetThreadState(parser.ExecutionSample.State)
 			correlation := StacktraceCorrelation{
 				ContextId: parser.ExecutionSample.ContextId,
@@ -50,9 +51,11 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 				builders.addStacktrace(sampleTypeWall, correlation, parser.ExecutionSample.StackTrace, values[:1])
 			}
 		case parser.TypeMap.T_WALL_CLOCK_SAMPLE:
+			fmt.Printf("T_WALL_CLOCK_SAMPLE %d \n", typ)
 			values[0] = int64(parser.WallClockSample.Samples)
 			builders.addStacktrace(sampleTypeWall, StacktraceCorrelation{}, parser.WallClockSample.StackTrace, values[:1])
 		case parser.TypeMap.T_ALLOC_IN_NEW_TLAB:
+			fmt.Printf("T_ALLOC_IN_NEW_TLAB %d \n", typ)
 			values[1] = int64(parser.ObjectAllocationInNewTLAB.TlabSize)
 			correlation := StacktraceCorrelation{
 				ContextId: parser.ObjectAllocationInNewTLAB.ContextId,
@@ -61,6 +64,7 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 			}
 			builders.addStacktrace(sampleTypeInTLAB, correlation, parser.ObjectAllocationInNewTLAB.StackTrace, values[:2])
 		case parser.TypeMap.T_ALLOC_OUTSIDE_TLAB:
+			fmt.Printf("T_ALLOC_OUTSIDE_TLAB %d \n", typ)
 			values[1] = int64(parser.ObjectAllocationOutsideTLAB.AllocationSize)
 			correlation := StacktraceCorrelation{
 				ContextId: parser.ObjectAllocationOutsideTLAB.ContextId,
@@ -68,10 +72,12 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 				SpanName:  parser.ObjectAllocationOutsideTLAB.SpanName,
 			}
 			builders.addStacktrace(sampleTypeOutTLAB, correlation, parser.ObjectAllocationOutsideTLAB.StackTrace, values[:2])
-		case parser.TypeMap.T_ALLOC_SAMPLE:
+		case parser.TypeMap.T_ALLOC_SAMPLE, parser.TypeMap.Datadog_HeapUsage:
+			fmt.Printf("T_ALLOC_SAMPLE Datadog_HeapUsage %d \n", typ)
 			values[1] = int64(parser.ObjectAllocationSample.Weight)
 			builders.addStacktrace(sampleTypeAllocSample, StacktraceCorrelation{}, parser.ObjectAllocationSample.StackTrace, values[:2])
 		case parser.TypeMap.T_MONITOR_ENTER:
+			fmt.Printf("T_MONITOR_ENTER %d \n", typ)
 			values[1] = int64(parser.JavaMonitorEnter.Duration)
 			correlation := StacktraceCorrelation{
 				ContextId: parser.JavaMonitorEnter.ContextId,
@@ -80,21 +86,31 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 			}
 			builders.addStacktrace(sampleTypeLock, correlation, parser.JavaMonitorEnter.StackTrace, values[:2])
 		case parser.TypeMap.T_THREAD_PARK:
+			fmt.Printf("T_THREAD_PARK %d \n", typ)
 			values[1] = int64(parser.ThreadPark.Duration)
 			builders.addStacktrace(sampleTypeThreadPark, StacktraceCorrelation{}, parser.ThreadPark.StackTrace, values[:2])
 		case parser.TypeMap.T_LIVE_OBJECT:
+			fmt.Printf("T_LIVE_OBJECT %d \n", typ)
 			builders.addStacktrace(sampleTypeLiveObject, StacktraceCorrelation{}, parser.LiveObject.StackTrace, values[:1])
 		case parser.TypeMap.T_MALLOC:
+			fmt.Printf("T_MALLOC %d \n", typ)
 			values[1] = int64(parser.Malloc.Size)
 			builders.addStacktrace(sampleTypeMalloc, StacktraceCorrelation{}, parser.Malloc.StackTrace, values[:2])
+		case parser.TypeMap.T_ObjectSample:
+			values[0] = int64(parser.ObjectSample.Weight)
+			values[1] = int64(parser.ObjectSample.Size)
+			builders.addStacktrace(sampleObjectSample, StacktraceCorrelation{}, parser.ObjectSample.StackTrace, values[:2])
 		case parser.TypeMap.T_ACTIVE_SETTING:
+			//fmt.Printf("T_ACTIVE_SETTING %d \n", typ)
 			if parser.ActiveSetting.Name == "event" {
 				event = parser.ActiveSetting.Value
 			}
-
+			//fmt.Printf("%+v \n", parser.ActiveSetting)
+		default:
+			fmt.Printf("skip tyid =%d \n", typ)
 		}
 	}
-
+	fmt.Printf("parser %+v", parser.TypeMap)
 	result = builders.build(event)
 
 	return result, nil
