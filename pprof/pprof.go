@@ -6,13 +6,17 @@ import (
 )
 
 const (
-	sampleTypeCPU        = 0
-	sampleTypeWall       = 1
-	sampleTypeInTLAB     = 2
-	sampleTypeOutTLAB    = 3
-	sampleTypeLock       = 4
-	sampleTypeThreadPark = 5
-	sampleTypeLiveObject = 6
+	sampleTypeCPU                    = 0
+	sampleTypeWall                   = 1
+	sampleTypeInTLAB                 = 2
+	sampleTypeOutTLAB                = 3
+	sampleTypeLock                   = 4
+	sampleTypeThreadPark             = 5
+	sampleTypeLiveObject             = 6
+	sampleTypeDatadogObjectSample    = 7
+	sampleTypeDatadogExecutionSample = 8
+	sampleTypeDataDogHeapUsage       = 9
+	sampleDatadogMethodSample        = 10
 )
 
 func newJfrPprofBuilders(p *parser.Parser, jfrLabels *LabelsSnapshot, piOriginal *ParseInput) *jfrPprofBuilders {
@@ -54,7 +58,7 @@ func (b *jfrPprofBuilders) addStacktrace(sampleType int64, contextID uint64, ref
 
 	addValues := func(dst []int64) {
 		mul := 1
-		if sampleType == sampleTypeCPU || sampleType == sampleTypeWall {
+		if sampleType == sampleTypeCPU || sampleType == sampleTypeWall || sampleType == sampleTypeDatadogExecutionSample {
 			mul = int(b.period)
 		}
 		for i, value := range values {
@@ -146,6 +150,23 @@ func (b *jfrPprofBuilders) profileBuilderForSampleType(sampleType int64) *Profil
 	case sampleTypeLiveObject:
 		builder.AddSampleType("live", "count")
 		builder.PeriodType("objects", "count")
+		metric = "memory"
+	case sampleTypeDataDogHeapUsage:
+		builder.AddSampleType("size", "bytes")
+		builder.PeriodType("space", "bytes")
+		metric = "memory"
+	case sampleTypeDatadogObjectSample:
+		builder.AddSampleType("size", "bytes")
+		builder.AddSampleType("weight", "count")
+		builder.PeriodType("space", "count")
+		metric = "memory"
+	case sampleTypeDatadogExecutionSample:
+		builder.AddSampleType("weight", "count")
+		builder.PeriodType("space", "count")
+		metric = "cpu"
+	case sampleDatadogMethodSample:
+		builder.AddSampleType("weight", "count")
+		builder.PeriodType("space", "count")
 		metric = "memory"
 	}
 	builder.MetricName(metric)

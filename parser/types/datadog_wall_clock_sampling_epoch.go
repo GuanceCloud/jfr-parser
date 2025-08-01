@@ -9,91 +9,82 @@ import (
 	"unsafe"
 )
 
-type BindThreadPark struct {
-	Temp   ThreadPark
-	Fields []BindFieldThreadPark
+type BindWallClockSamplingEpoch struct {
+	Temp   WallClockSamplingEpoch
+	Fields []BindFieldWallClockSamplingEpoch
 }
 
-type BindFieldThreadPark struct {
-	Field         *def.Field
-	uint64        *uint64
-	ThreadRef     *ThreadRef
-	StackTraceRef *StackTraceRef
-	ClassRef      *ClassRef
+type BindFieldWallClockSamplingEpoch struct {
+	Field  *def.Field
+	uint64 *uint64
+	uint32 *uint32
 }
 
-func NewBindThreadPark(typ *def.Class, typeMap *def.TypeMap) *BindThreadPark {
-	res := new(BindThreadPark)
-	res.Fields = make([]BindFieldThreadPark, 0, len(typ.Fields))
+func NewBindWallClockSamplingEpoch(typ *def.Class, typeMap *def.TypeMap) *BindWallClockSamplingEpoch {
+	res := new(BindWallClockSamplingEpoch)
+	res.Fields = make([]BindFieldWallClockSamplingEpoch, 0, len(typ.Fields))
 	for i := 0; i < len(typ.Fields); i++ {
 		switch typ.Fields[i].Name {
 		case "startTime":
 			if typ.Fields[i].Equals(&def.Field{Name: "startTime", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
 		case "duration":
 			if typ.Fields[i].Equals(&def.Field{Name: "duration", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Duration})
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint64: &res.Temp.Duration})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "eventThread":
-			if typ.Fields[i].Equals(&def.Field{Name: "eventThread", Type: typeMap.T_THREAD, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ThreadRef: &res.Temp.EventThread})
+		case "samplePoolSize":
+			if typ.Fields[i].Equals(&def.Field{Name: "samplePoolSize", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint32: &res.Temp.SamplePoolSize})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "stackTrace":
-			if typ.Fields[i].Equals(&def.Field{Name: "stackTrace", Type: typeMap.T_STACK_TRACE, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], StackTraceRef: &res.Temp.StackTrace})
+		case "numSuccessfulSamples":
+			if typ.Fields[i].Equals(&def.Field{Name: "numSuccessfulSamples", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint32: &res.Temp.NumSuccessfulSamples})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "parkedClass":
-			if typ.Fields[i].Equals(&def.Field{Name: "parkedClass", Type: typeMap.T_CLASS, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ClassRef: &res.Temp.ParkedClass})
+		case "numFailedSamples":
+			if typ.Fields[i].Equals(&def.Field{Name: "numFailedSamples", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint32: &res.Temp.NumFailedSamples})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "timeout":
-			if typ.Fields[i].Equals(&def.Field{Name: "timeout", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Timeout})
+		case "numExitedThreads":
+			if typ.Fields[i].Equals(&def.Field{Name: "numExitedThreads", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint32: &res.Temp.NumExitedThreads})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "until":
-			if typ.Fields[i].Equals(&def.Field{Name: "until", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Until})
+		case "numPermissionDenied":
+			if typ.Fields[i].Equals(&def.Field{Name: "numPermissionDenied", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i], uint32: &res.Temp.NumPermissionDenied})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
-			}
-		case "address":
-			if typ.Fields[i].Equals(&def.Field{Name: "address", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Address})
-			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip changed field
 			}
 		default:
-			res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip unknown new field
+			res.Fields = append(res.Fields, BindFieldWallClockSamplingEpoch{Field: &typ.Fields[i]}) // skip unknown new field
 		}
 	}
 	return res
 }
 
-type ThreadPark struct {
-	StartTime   uint64
-	Duration    uint64
-	EventThread ThreadRef
-	StackTrace  StackTraceRef
-	ParkedClass ClassRef
-	Timeout     uint64
-	Until       uint64
-	Address     uint64
+type WallClockSamplingEpoch struct {
+	StartTime            uint64
+	Duration             uint64
+	SamplePoolSize       uint32
+	NumSuccessfulSamples uint32
+	NumFailedSamples     uint32
+	NumExitedThreads     uint32
+	NumPermissionDenied  uint32
 }
 
-func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.TypeMap) (pos int, err error) {
+func (this *WallClockSamplingEpoch) Parse(data []byte, bind *BindWallClockSamplingEpoch, typeMap *def.TypeMap) (pos int, err error) {
 	var (
 		v64_  uint64
 		v32_  uint32
@@ -142,20 +133,6 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 						if b_ < 0x80 {
 							break
 						}
-					}
-				}
-				switch bind.Fields[bindFieldIndex].Field.Type {
-				case typeMap.T_THREAD:
-					if bind.Fields[bindFieldIndex].ThreadRef != nil {
-						*bind.Fields[bindFieldIndex].ThreadRef = ThreadRef(v64_)
-					}
-				case typeMap.T_STACK_TRACE:
-					if bind.Fields[bindFieldIndex].StackTraceRef != nil {
-						*bind.Fields[bindFieldIndex].StackTraceRef = StackTraceRef(v64_)
-					}
-				case typeMap.T_CLASS:
-					if bind.Fields[bindFieldIndex].ClassRef != nil {
-						*bind.Fields[bindFieldIndex].ClassRef = ClassRef(v64_)
 					}
 				}
 			} else {
@@ -275,7 +252,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 							break
 						}
 					}
-					// skipping
+					if bind.Fields[bindFieldIndex].uint32 != nil {
+						*bind.Fields[bindFieldIndex].uint32 = v32_
+					}
 				case typeMap.T_LONG:
 					v64_ = 0
 					for shift = uint(0); shift <= 56; shift += 7 {

@@ -1,6 +1,7 @@
 package format
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -30,10 +31,11 @@ func (f *formatterPprof) Format(buf []byte, dest string) ([]string, [][]byte, er
 	destDir := filepath.Dir(dest)
 	destBase := filepath.Base(dest)
 	for i := 0; i < len(profiles.Profiles); i++ {
-		filename := fmt.Sprintf("%s.%s", profiles.Profiles[i].Metric, destBase)
+		//fmt.Sprintf("%s.%d.%s",profiles.Profiles[i].Metric,i)
+		filename := fmt.Sprintf("%s.%d.%s", profiles.Profiles[i].Metric, i, destBase)
 		dests = append(dests, filepath.Join(destDir, filename))
 
-		bs, err := profiles.Profiles[i].Profile.MarshalVT()
+		bs, err := json.MarshalIndent(profiles.Profiles[i].Profile, "", "	")
 		if err != nil {
 			return nil, nil, err
 		}

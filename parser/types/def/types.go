@@ -1,5 +1,7 @@
 package def
 
+import "golang.org/x/text/encoding"
+
 type TypeID uint64
 
 type TypeMap struct {
@@ -26,10 +28,23 @@ type TypeMap struct {
 	T_CLASS_LOADER TypeID
 
 	T_EXECUTION_SAMPLE   TypeID
+	T_WALL_CLOCK_SAMPLE  TypeID
 	T_ALLOC_IN_NEW_TLAB  TypeID
+	T_ObjectSample       TypeID
 	T_ALLOC_OUTSIDE_TLAB TypeID
+	T_ALLOC_SAMPLE       TypeID
 	T_LIVE_OBJECT        TypeID
 	T_MONITOR_ENTER      TypeID
 	T_THREAD_PARK        TypeID
 	T_ACTIVE_SETTING     TypeID
+	T_MALLOC             TypeID
+	T_FREE               TypeID
+	//T_ExecutionMode         TypeID
+	//T_CounterName           TypeID
+
+	T_Datadog_ExecutionSample TypeID
+	T_Datadog_HeapUsage       TypeID
+	T_Datadog_ObjectSample    TypeID
+
+	ISO8859_1Decoder *encoding.Decoder
 }

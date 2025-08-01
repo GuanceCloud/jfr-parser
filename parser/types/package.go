@@ -37,7 +37,7 @@ func NewBindPackage(typ *def.Class, typeMap *def.TypeMap) *BindPackage {
 	return res
 }
 
-type PackageRef uint32
+type PackageRef uint64
 type PackageList struct {
 	IDMap   map[PackageRef]uint32
 	Package []Package
@@ -78,22 +78,24 @@ func (this *PackageList) Parse(data []byte, bind *BindPackage, typeMap *def.Type
 	this.IDMap = make(map[PackageRef]uint32, n)
 	this.Package = make([]Package, n)
 	for i := 0; i < n; i++ {
-		v32_ = uint32(0)
-		for shift = uint(0); ; shift += 7 {
-			if shift >= 32 {
-				return 0, def.ErrIntOverflow
-			}
+		v64_ = 0
+		for shift = uint(0); shift <= 56; shift += 7 {
 			if pos >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
 			b_ = data[pos]
 			pos++
-			v32_ |= uint32(b_&0x7F) << shift
-			if b_ < 0x80 {
+			if shift == 56 {
+				v64_ |= uint64(b_&0xFF) << shift
 				break
+			} else {
+				v64_ |= uint64(b_&0x7F) << shift
+				if b_ < 0x80 {
+					break
+				}
 			}
 		}
-		id := PackageRef(v32_)
+		id := PackageRef(v64_)
 		for bindFieldIndex := 0; bindFieldIndex < len(bind.Fields); bindFieldIndex++ {
 			bindArraySize := 1
 			if bind.Fields[bindFieldIndex].Field.Array {
@@ -116,25 +118,27 @@ func (this *PackageList) Parse(data []byte, bind *BindPackage, typeMap *def.Type
 			}
 			for bindArrayIndex := 0; bindArrayIndex < bindArraySize; bindArrayIndex++ {
 				if bind.Fields[bindFieldIndex].Field.ConstantPool {
-					v32_ = uint32(0)
-					for shift = uint(0); ; shift += 7 {
-						if shift >= 32 {
-							return 0, def.ErrIntOverflow
-						}
+					v64_ = 0
+					for shift = uint(0); shift <= 56; shift += 7 {
 						if pos >= l {
 							return 0, io.ErrUnexpectedEOF
 						}
 						b_ = data[pos]
 						pos++
-						v32_ |= uint32(b_&0x7F) << shift
-						if b_ < 0x80 {
+						if shift == 56 {
+							v64_ |= uint64(b_&0xFF) << shift
 							break
+						} else {
+							v64_ |= uint64(b_&0x7F) << shift
+							if b_ < 0x80 {
+								break
+							}
 						}
 					}
 					switch bind.Fields[bindFieldIndex].Field.Type {
 					case typeMap.T_SYMBOL:
 						if bind.Fields[bindFieldIndex].SymbolRef != nil {
-							*bind.Fields[bindFieldIndex].SymbolRef = SymbolRef(v32_)
+							*bind.Fields[bindFieldIndex].SymbolRef = SymbolRef(v64_)
 						}
 					}
 				} else {
@@ -174,6 +178,66 @@ func (this *PackageList) Parse(data []byte, bind *BindPackage, typeMap *def.Type
 							bs := data[pos : pos+int(v32_)]
 							s_ = *(*string)(unsafe.Pointer(&bs))
 							pos += int(v32_)
+						case 5:
+							v32_ = uint32(0)
+							for shift = uint(0); ; shift += 7 {
+								if shift >= 32 {
+									return 0, def.ErrIntOverflow
+								}
+								if pos >= l {
+									return 0, io.ErrUnexpectedEOF
+								}
+								b_ = data[pos]
+								pos++
+								v32_ |= uint32(b_&0x7F) << shift
+								if b_ < 0x80 {
+									break
+								}
+							}
+							if pos+int(v32_) > l {
+								return 0, io.ErrUnexpectedEOF
+							}
+							bs := data[pos : pos+int(v32_)]
+							bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+							s_ = *(*string)(unsafe.Pointer(&bs))
+							pos += int(v32_)
+						case 4:
+							v32_ = uint32(0)
+							for shift = uint(0); ; shift += 7 {
+								if shift >= 32 {
+									return 0, def.ErrIntOverflow
+								}
+								if pos >= l {
+									return 0, io.ErrUnexpectedEOF
+								}
+								b_ = data[pos]
+								pos++
+								v32_ |= uint32(b_&0x7F) << shift
+								if b_ < 0x80 {
+									break
+								}
+							}
+							bl := int(v32_)
+							buf := make([]rune, bl)
+							for i := 0; i < bl; i++ {
+								v32_ = uint32(0)
+								for shift = uint(0); ; shift += 7 {
+									if shift >= 32 {
+										return 0, def.ErrIntOverflow
+									}
+									if pos >= l {
+										return 0, io.ErrUnexpectedEOF
+									}
+									b_ = data[pos]
+									pos++
+									v32_ |= uint32(b_&0x7F) << shift
+									if b_ < 0x80 {
+										break
+									}
+								}
+								buf[i] = rune(v32_)
+							}
+							s_ = string(buf)
 						default:
 							return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 						}
@@ -315,6 +379,66 @@ func (this *PackageList) Parse(data []byte, bind *BindPackage, typeMap *def.Type
 										bs := data[pos : pos+int(v32_)]
 										s_ = *(*string)(unsafe.Pointer(&bs))
 										pos += int(v32_)
+									case 5:
+										v32_ = uint32(0)
+										for shift = uint(0); ; shift += 7 {
+											if shift >= 32 {
+												return 0, def.ErrIntOverflow
+											}
+											if pos >= l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											b_ = data[pos]
+											pos++
+											v32_ |= uint32(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
+										}
+										if pos+int(v32_) > l {
+											return 0, io.ErrUnexpectedEOF
+										}
+										bs := data[pos : pos+int(v32_)]
+										bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+										s_ = *(*string)(unsafe.Pointer(&bs))
+										pos += int(v32_)
+									case 4:
+										v32_ = uint32(0)
+										for shift = uint(0); ; shift += 7 {
+											if shift >= 32 {
+												return 0, def.ErrIntOverflow
+											}
+											if pos >= l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											b_ = data[pos]
+											pos++
+											v32_ |= uint32(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
+										}
+										bl := int(v32_)
+										buf := make([]rune, bl)
+										for i := 0; i < bl; i++ {
+											v32_ = uint32(0)
+											for shift = uint(0); ; shift += 7 {
+												if shift >= 32 {
+													return 0, def.ErrIntOverflow
+												}
+												if pos >= l {
+													return 0, io.ErrUnexpectedEOF
+												}
+												b_ = data[pos]
+												pos++
+												v32_ |= uint32(b_&0x7F) << shift
+												if b_ < 0x80 {
+													break
+												}
+											}
+											buf[i] = rune(v32_)
+										}
+										s_ = string(buf)
 									default:
 										return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 									}

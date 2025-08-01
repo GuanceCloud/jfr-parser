@@ -7,53 +7,64 @@ import (
 )
 
 var (
-	T_METADATA                = def.TypeID(0)
-	T_CPOOL                   = def.TypeID(1)
-	T_BOOLEAN                 = def.TypeID(4)
-	T_CHAR                    = def.TypeID(5)
-	T_FLOAT                   = def.TypeID(6)
-	T_DOUBLE                  = def.TypeID(7)
-	T_BYTE                    = def.TypeID(8)
-	T_SHORT                   = def.TypeID(9)
-	T_INT                     = def.TypeID(10)
-	T_LONG                    = def.TypeID(11)
-	T_STRING                  = def.TypeID(20)
-	T_CLASS                   = def.TypeID(21)
-	T_THREAD                  = def.TypeID(22)
-	T_CLASS_LOADER            = def.TypeID(23)
-	T_FRAME_TYPE              = def.TypeID(24)
-	T_THREAD_STATE            = def.TypeID(25)
-	T_STACK_TRACE             = def.TypeID(26)
-	T_STACK_FRAME             = def.TypeID(27)
-	T_METHOD                  = def.TypeID(28)
-	T_PACKAGE                 = def.TypeID(29)
-	T_SYMBOL                  = def.TypeID(30)
-	T_LOG_LEVEL               = def.TypeID(31)
-	T_EVENT                   = def.TypeID(100)
-	T_EXECUTION_SAMPLE        = def.TypeID(101)
-	T_ALLOC_IN_NEW_TLAB       = def.TypeID(102)
-	T_ALLOC_OUTSIDE_TLAB      = def.TypeID(103)
-	T_MONITOR_ENTER           = def.TypeID(104)
-	T_THREAD_PARK             = def.TypeID(105)
-	T_CPU_LOAD                = def.TypeID(106)
-	T_ACTIVE_RECORDING        = def.TypeID(107)
-	T_ACTIVE_SETTING          = def.TypeID(108)
-	T_OS_INFORMATION          = def.TypeID(109)
-	T_CPU_INFORMATION         = def.TypeID(110)
-	T_JVM_INFORMATION         = def.TypeID(111)
-	T_INITIAL_SYSTEM_PROPERTY = def.TypeID(112)
-	T_NATIVE_LIBRARY          = def.TypeID(113)
-	T_LOG                     = def.TypeID(114)
-	T_LIVE_OBJECT             = def.TypeID(115)
-	T_ANNOTATION              = def.TypeID(200)
-	T_LABEL                   = def.TypeID(201)
-	T_CATEGORY                = def.TypeID(202)
-	T_TIMESTAMP               = def.TypeID(203)
-	T_TIMESPAN                = def.TypeID(204)
-	T_DATA_AMOUNT             = def.TypeID(205)
-	T_MEMORY_ADDRESS          = def.TypeID(206)
-	T_UNSIGNED                = def.TypeID(207)
-	T_PERCENTAGE              = def.TypeID(208)
+	T_METADATA                     = def.TypeID(0)
+	T_CPOOL                        = def.TypeID(1)
+	T_BOOLEAN                      = def.TypeID(4)
+	T_CHAR                         = def.TypeID(5)
+	T_FLOAT                        = def.TypeID(6)
+	T_DOUBLE                       = def.TypeID(7)
+	T_BYTE                         = def.TypeID(8)
+	T_SHORT                        = def.TypeID(9)
+	T_INT                          = def.TypeID(10)
+	T_LONG                         = def.TypeID(11)
+	T_STRING                       = def.TypeID(20)
+	T_CLASS                        = def.TypeID(21)
+	T_THREAD                       = def.TypeID(22)
+	T_CLASS_LOADER                 = def.TypeID(23)
+	T_FRAME_TYPE                   = def.TypeID(24)
+	T_THREAD_STATE                 = def.TypeID(25)
+	T_STACK_TRACE                  = def.TypeID(26)
+	T_STACK_FRAME                  = def.TypeID(27)
+	T_METHOD                       = def.TypeID(28)
+	T_PACKAGE                      = def.TypeID(29)
+	T_SYMBOL                       = def.TypeID(30)
+	T_LOG_LEVEL                    = def.TypeID(31)
+	T_ExecutionMode                = def.TypeID(33)
+	T_CounterName                  = def.TypeID(34)
+	T_EVENT                        = def.TypeID(100)
+	T_EXECUTION_SAMPLE             = def.TypeID(101)
+	T_ALLOC_IN_NEW_TLAB            = def.TypeID(102)
+	T_ALLOC_OUTSIDE_TLAB           = def.TypeID(103)
+	T_MONITOR_ENTER                = def.TypeID(104)
+	T_THREAD_PARK                  = def.TypeID(105)
+	T_CPU_LOAD                     = def.TypeID(106)
+	T_ACTIVE_RECORDING             = def.TypeID(107)
+	T_ACTIVE_SETTING               = def.TypeID(108)
+	T_OS_INFORMATION               = def.TypeID(109)
+	T_CPU_INFORMATION              = def.TypeID(110)
+	T_JVM_INFORMATION              = def.TypeID(111)
+	T_INITIAL_SYSTEM_PROPERTY      = def.TypeID(112)
+	T_NATIVE_LIBRARY               = def.TypeID(113)
+	T_LOG                          = def.TypeID(114)
+	T_LIVE_OBJECT                  = def.TypeID(115)
+	T_WALL_CLOCK_SAMPLE            = def.TypeID(118)
+	T_MALLOC                       = def.TypeID(119)
+	T_FREE                         = def.TypeID(120)
+	T_HeapUsage                    = def.TypeID(121)
+	T_QueueTime                    = def.TypeID(123)
+	T_DatadogProfilerConfig        = def.TypeID(122)
+	T_DatadogProfilerClassRefCache = def.TypeID(124)
+	T_ProfilerCounter              = def.TypeID(125)
+	T_ANNOTATION                   = def.TypeID(200)
+	T_LABEL                        = def.TypeID(201)
+	T_CATEGORY                     = def.TypeID(202)
+	T_TIMESTAMP                    = def.TypeID(203)
+	T_TIMESPAN                     = def.TypeID(204)
+	T_DATA_AMOUNT                  = def.TypeID(205)
+	T_MEMORY_ADDRESS               = def.TypeID(206)
+	T_UNSIGNED                     = def.TypeID(207)
+	T_PERCENTAGE                   = def.TypeID(208)
+	T_ALLOC_SAMPLE                 = def.TypeID(209)
 )
 
 func TypeID2Sym(id def.TypeID) string {
@@ -110,6 +121,8 @@ func TypeID2Sym(id def.TypeID) string {
 		return "T_ALLOC_IN_NEW_TLAB"
 	case T_ALLOC_OUTSIDE_TLAB:
 		return "T_ALLOC_OUTSIDE_TLAB"
+	case T_ALLOC_SAMPLE:
+		return "T_ALLOC_SAMPLE"
 	case T_MONITOR_ENTER:
 		return "T_MONITOR_ENTER"
 	case T_THREAD_PARK:
@@ -152,6 +165,28 @@ func TypeID2Sym(id def.TypeID) string {
 		return "T_UNSIGNED"
 	case T_PERCENTAGE:
 		return "T_PERCENTAGE"
+	/*	T_HeapUsage                    = def.TypeID(121)
+		T_QueueTime                    = def.TypeID(123)
+		T_DatadogProfilerConfig        = def.TypeID(122)
+		T_DatadogProfilerClassRefCache = def.TypeID(124)
+		T_ProfilerCounter              = def.TypeID(125)
+		T_ExecutionMode                = def.TypeID(33)
+		T_CountName                    = def.TypeID(34)*/
+	case T_ExecutionMode:
+		return "T_ExecutionMode"
+	case T_CounterName:
+		return "T_CounterName"
+	case T_HeapUsage:
+		return "T_HeapUsage"
+	case T_QueueTime:
+		return "T_QueueTime"
+	case T_DatadogProfilerConfig:
+		return "T_DatadogProfilerConfig"
+	case T_DatadogProfilerClassRefCache:
+		return "T_DatadogProfilerClassRefCache"
+	case T_ProfilerCounter:
+		return "T_ProfilerCounter"
+
 	default:
 		return fmt.Sprintf("unknown type %d", id)
 	}
@@ -302,9 +337,24 @@ var Type_jdk_ExecutionSample = def.Class{
 		{Name: "sampledThread", Type: T_THREAD, ConstantPool: true},
 		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
 		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
 	},
 }
+
+var Type_profiler_WallClockSample = def.Class{
+	Name: "profiler.WallClockSample",
+	ID:   T_WALL_CLOCK_SAMPLE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "sampledThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		{Name: "samples", Type: T_INT, ConstantPool: false},
+	},
+}
+
 var Type_jdk_ObjectAllocationInNewTLAB = def.Class{
 	Name: "jdk.ObjectAllocationInNewTLAB",
 	ID:   T_ALLOC_IN_NEW_TLAB,
@@ -316,6 +366,8 @@ var Type_jdk_ObjectAllocationInNewTLAB = def.Class{
 		{Name: "allocationSize", Type: T_LONG, ConstantPool: false},
 		{Name: "tlabSize", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_ObjectAllocationOutsideTLAB = def.Class{
@@ -328,8 +380,22 @@ var Type_jdk_ObjectAllocationOutsideTLAB = def.Class{
 		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
 		{Name: "allocationSize", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 	},
 }
+var Type_jdk_ObjectAllocationSample = def.Class{
+	Name: "jdk.ObjectAllocationSample",
+	ID:   T_ALLOC_SAMPLE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
+		{Name: "weight", Type: T_LONG, ConstantPool: false},
+	},
+}
+
 var Type_jdk_JavaMonitorEnter = def.Class{
 	Name: "jdk.JavaMonitorEnter",
 	ID:   T_MONITOR_ENTER,
@@ -342,8 +408,11 @@ var Type_jdk_JavaMonitorEnter = def.Class{
 		{Name: "previousOwner", Type: T_THREAD, ConstantPool: true},
 		{Name: "address", Type: T_LONG, ConstantPool: false},
 		{Name: "contextId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanId", Type: T_LONG, ConstantPool: false},
+		{Name: "spanName", Type: T_LONG, ConstantPool: false},
 	},
 }
+
 var Type_jdk_ThreadPark = def.Class{
 	Name: "jdk.ThreadPark",
 	ID:   T_THREAD_PARK,
@@ -356,7 +425,6 @@ var Type_jdk_ThreadPark = def.Class{
 		{Name: "timeout", Type: T_LONG, ConstantPool: false},
 		{Name: "until", Type: T_LONG, ConstantPool: false},
 		{Name: "address", Type: T_LONG, ConstantPool: false},
-		{Name: "contextId", Type: T_LONG, ConstantPool: false},
 	},
 }
 var Type_jdk_CPULoad = def.Class{
@@ -460,6 +528,7 @@ var Type_profiler_Log = def.Class{
 		{Name: "message", Type: T_STRING, ConstantPool: false},
 	},
 }
+
 var Type_profiler_LiveObject = def.Class{
 	Name: "profiler.LiveObject",
 	ID:   T_LIVE_OBJECT,
@@ -521,4 +590,254 @@ var Type_jdk_jfr_Percentage = def.Class{
 	Name:   "jdk.jfr.Percentage",
 	ID:     T_PERCENTAGE,
 	Fields: []def.Field{},
+}
+
+var Type_profiler_Malloc = def.Class{
+	Name: "profiler.Malloc",
+	ID:   T_MALLOC,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "address", Type: T_LONG, ConstantPool: false},
+		{Name: "size", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+var Type_profiler_Free = def.Class{
+	Name: "profiler.Free",
+	ID:   T_FREE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "address", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+var Type_ExecutionMode = def.Class{
+	Name: "datadog.types.ExecutionMode",
+	ID:   T_ExecutionMode,
+	Fields: []def.Field{
+		{Name: "name", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+//datadog.ProfilerCounter:class{name: datadog.ProfilerCounter, id: 125, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:name Type:34 ConstantPool:false Array:false}
+//{Name:count Type:11 ConstantPool:false Array:false}]}
+
+var Type_ProfilerCounter = def.Class{
+	Name: "datadog.ProfilerCounter",
+	ID:   T_ProfilerCounter,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "name", Type: T_CounterName, ConstantPool: false},
+		{Name: "count", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+//profiler.types.CounterName:class{name: profiler.types.CounterName, id: 34, fields: [
+//{Name:value Type:20 ConstantPool:false Array:false}]}
+
+var Type_CounterName = def.Class{
+	Name: "profiler.types.CounterName",
+	ID:   T_CounterName,
+	Fields: []def.Field{
+		{Name: "value", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+var Type_datadogObjectSample = def.Class{
+	Name: "datadog.ObjectSample",
+	ID:   def.TypeID(103),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
+		{Name: "size", Type: T_LONG, ConstantPool: false},
+		{Name: "weight", Type: T_FLOAT, ConstantPool: false},
+	},
+}
+var Type_datadogProfilerClassRefCache = def.Class{
+	Name: "datadog.DatadogProfilerClassRefCache",
+	ID:   def.TypeID(124),
+	// {Name:startTime Type:11 ConstantPool:false Array:false} {Name:size Type:11 ConstantPool:false Array:false}]
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "size", Type: T_LONG, ConstantPool: false, Array: false},
+	},
+}
+
+//datadog.DatadogProfilerConfig:class{name: datadog.DatadogProfilerConfig, id: 122, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:duration Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false}
+//{Name:cpuInterval Type:11 ConstantPool:false Array:false}
+//{Name:wallInterval Type:11 ConstantPool:false Array:false}
+//{Name:allocInterval Type:11 ConstantPool:false Array:false}
+//{Name:memleakInterval Type:11 ConstantPool:false Array:false}
+//{Name:memleakCapacity Type:11 ConstantPool:false Array:false}
+//{Name:memleakTrackPercent Type:11 ConstantPool:false Array:false}
+//{Name:gcGenerations Type:4 ConstantPool:false Array:false}
+//{Name:modeMask Type:10 ConstantPool:false Array:false}
+//{Name:version Type:20 ConstantPool:false Array:false}
+//{Name:cpuEngine Type:20 ConstantPool:false Array:false}]}
+
+var Type_DatadogProfilerConfig = def.Class{
+	Name: "datadog.DatadogProfilerConfig",
+	ID:   T_DatadogProfilerConfig,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "cpuInterval", Type: T_LONG, ConstantPool: false},
+		{Name: "wallInterval", Type: T_LONG, ConstantPool: false},
+		{Name: "allocInterval", Type: T_LONG, ConstantPool: false},
+		{Name: "memleakInterval", Type: T_LONG, ConstantPool: false},
+		{Name: "memleakCapacity", Type: T_LONG, ConstantPool: false},
+		{Name: "memleakTrackPercent", Type: T_LONG, ConstantPool: false},
+		{Name: "gcGenerations", Type: T_BOOLEAN, ConstantPool: false},
+		{Name: "modeMask", Type: T_INT, ConstantPool: false},
+		{Name: "version", Type: T_STRING, ConstantPool: false},
+		{Name: "cpuEngine", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+//datadog.HeapLiveObject:class{name: datadog.HeapLiveObject, id: 105, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false}
+//{Name:stackTrace Type:26 ConstantPool:true Array:false}
+//{Name:objectClass Type:21 ConstantPool:true Array:false}
+//{Name:age Type:11 ConstantPool:false Array:false}
+//{Name:size Type:11 ConstantPool:false Array:false}
+//{Name:weight Type:6 ConstantPool:false Array:false}
+//{Name:spanId Type:11 ConstantPool:false Array:false}
+//{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
+//{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
+
+var Type_datadog_HeapLiveObject = def.Class{
+	Name: "datadog.HeapLiveObject",
+	ID:   def.TypeID(105),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "objectClass", Type: T_CLASS, ConstantPool: true},
+		{Name: "age", Type: T_LONG, ConstantPool: false},
+		{Name: "size", Type: T_LONG, ConstantPool: false},
+		{Name: "weight", Type: T_FLOAT, ConstantPool: false},
+	},
+}
+
+//datadog.HeapUsage:class{name: datadog.HeapUsage, id: 121, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:size Type:11 ConstantPool:false Array:false}
+//{Name:isLive Type:4 ConstantPool:false Array:false}]}
+
+var Type_datadog_HeapUsage = def.Class{
+	Name: "datadog.HeapUsage",
+	ID:   def.TypeID(121),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "size", Type: T_LONG, ConstantPool: false},
+		{Name: "isLive", Type: T_BOOLEAN, ConstantPool: false},
+	},
+}
+
+// datadog.MethodSample:class{name: datadog.MethodSample, id: 102, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false}
+//{Name:stackTrace Type:26 ConstantPool:true Array:false}
+//{Name:state Type:25 ConstantPool:true Array:false}
+//{Name:mode Type:33 ConstantPool:true Array:false}
+//{Name:weight Type:11 ConstantPool:false Array:false}
+//{Name:spanId Type:11 ConstantPool:false Array:false}
+//{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
+//{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
+
+var Type_datadog_MethodSample = def.Class{
+	Name: "datadog.MethodSample",
+	ID:   def.TypeID(102),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		//{Name: "mode", Type: T_ExecutionMode, ConstantPool: true},
+		{Name: "weight", Type: T_FLOAT, ConstantPool: false},
+	},
+}
+
+//datadog.QueueTime:class{name: datadog.QueueTime, id: 123, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:duration Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false}
+//{Name:origin Type:22 ConstantPool:true Array:false}
+//{Name:task Type:21 ConstantPool:true Array:false}
+//{Name:scheduler Type:21 ConstantPool:true Array:false}
+//{Name:spanId Type:11 ConstantPool:false Array:false}
+//{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
+//{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
+
+var Type_QueueTime = def.Class{
+	Name: "datadog.QueueTime",
+	ID:   def.TypeID(123),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "origin", Type: T_THREAD, ConstantPool: true},
+		{Name: "task", Type: T_CLASS, ConstantPool: true},
+		{Name: "scheduler", Type: T_CLASS, ConstantPool: true},
+	},
+}
+
+//datadog.WallClockSamplingEpoch:class{name: datadog.WallClockSamplingEpoch, id: 118, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:duration Type:11 ConstantPool:false Array:false}
+//{Name:samplePoolSize Type:10 ConstantPool:false Array:false}
+//{Name:numSuccessfulSamples Type:10 ConstantPool:false Array:false}
+//{Name:numFailedSamples Type:10 ConstantPool:false Array:false}
+//{Name:numExitedThreads Type:10 ConstantPool:false Array:false}
+//{Name:numPermissionDenied Type:10 ConstantPool:false Array:false}]}
+
+var Type_WallClockSamplingEpoch = def.Class{
+	Name: "datadog.WallClockSamplingEpoch",
+	ID:   def.TypeID(118),
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "samplePoolSize", Type: T_INT, ConstantPool: false},
+		{Name: "numSuccessfulSamples", Type: T_INT, ConstantPool: false},
+		{Name: "numFailedSamples", Type: T_INT, ConstantPool: false},
+		{Name: "numExitedThreads", Type: T_INT, ConstantPool: false},
+		{Name: "numPermissionDenied", Type: T_INT, ConstantPool: false},
+	},
+}
+
+//datadog.ExecutionSample:class{name: datadog.ExecutionSample, id: 101, fields: [
+//{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false}
+//{Name:stackTrace Type:26 ConstantPool:true Array:false}
+//{Name:state Type:25 ConstantPool:true Array:false}
+//{Name:mode Type:33 ConstantPool:true Array:false}
+//{Name:weight Type:11 ConstantPool:false Array:false}
+//{Name:spanId Type:11 ConstantPool:false Array:false}
+//{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
+//{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
+
+var Type_datadogExecutionSample = def.Class{
+	Name: "datadog.ExecutionSample",
+	ID:   T_EXECUTION_SAMPLE,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "sampledThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
+		//{Name: "mode", Type: T_ExecutionMode, ConstantPool: true}, skip
+		{Name: "weight", Type: T_LONG, ConstantPool: false},
+	},
 }

@@ -40,7 +40,11 @@ type formatter interface {
 // Usage: ./jfrparser [options] /path/to/jfr [/path/to/dest]
 func main() {
 	c := new(command)
-	parseCommand(c)
+	//parseCommand(c)
+	//c.src = "/home/songlq/tmp/dkjfr/metric012025-07-25-10-38.jfr"
+	c.src = "/home/songlq/tmp/dkjfr/recording.jfr"
+	c.dest = "/home/songlq/tmp/dkjfr/json"
+	c.format = "pprof"
 
 	buf, err := os.ReadFile(c.src)
 	if err != nil {

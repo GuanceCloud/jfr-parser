@@ -9,91 +9,127 @@ import (
 	"unsafe"
 )
 
-type BindThreadPark struct {
-	Temp   ThreadPark
-	Fields []BindFieldThreadPark
+type BindDatadogProfilerConfig struct {
+	Temp   DatadogProfilerConfig
+	Fields []BindFieldDatadogProfilerConfig
 }
 
-type BindFieldThreadPark struct {
-	Field         *def.Field
-	uint64        *uint64
-	ThreadRef     *ThreadRef
-	StackTraceRef *StackTraceRef
-	ClassRef      *ClassRef
+type BindFieldDatadogProfilerConfig struct {
+	Field     *def.Field
+	uint64    *uint64
+	ThreadRef *ThreadRef
+	bool      *bool
+	uint32    *uint32
+	string    *string
 }
 
-func NewBindThreadPark(typ *def.Class, typeMap *def.TypeMap) *BindThreadPark {
-	res := new(BindThreadPark)
-	res.Fields = make([]BindFieldThreadPark, 0, len(typ.Fields))
+func NewBindDatadogProfilerConfig(typ *def.Class, typeMap *def.TypeMap) *BindDatadogProfilerConfig {
+	res := new(BindDatadogProfilerConfig)
+	res.Fields = make([]BindFieldDatadogProfilerConfig, 0, len(typ.Fields))
 	for i := 0; i < len(typ.Fields); i++ {
 		switch typ.Fields[i].Name {
 		case "startTime":
 			if typ.Fields[i].Equals(&def.Field{Name: "startTime", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
 		case "duration":
 			if typ.Fields[i].Equals(&def.Field{Name: "duration", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Duration})
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.Duration})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
 		case "eventThread":
 			if typ.Fields[i].Equals(&def.Field{Name: "eventThread", Type: typeMap.T_THREAD, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ThreadRef: &res.Temp.EventThread})
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], ThreadRef: &res.Temp.EventThread})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "stackTrace":
-			if typ.Fields[i].Equals(&def.Field{Name: "stackTrace", Type: typeMap.T_STACK_TRACE, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], StackTraceRef: &res.Temp.StackTrace})
+		case "cpuInterval":
+			if typ.Fields[i].Equals(&def.Field{Name: "cpuInterval", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.CpuInterval})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "parkedClass":
-			if typ.Fields[i].Equals(&def.Field{Name: "parkedClass", Type: typeMap.T_CLASS, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ClassRef: &res.Temp.ParkedClass})
+		case "wallInterval":
+			if typ.Fields[i].Equals(&def.Field{Name: "wallInterval", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.WallInterval})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "timeout":
-			if typ.Fields[i].Equals(&def.Field{Name: "timeout", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Timeout})
+		case "allocInterval":
+			if typ.Fields[i].Equals(&def.Field{Name: "allocInterval", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.AllocInterval})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "until":
-			if typ.Fields[i].Equals(&def.Field{Name: "until", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Until})
+		case "memleakInterval":
+			if typ.Fields[i].Equals(&def.Field{Name: "memleakInterval", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.MemleakInterval})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "address":
-			if typ.Fields[i].Equals(&def.Field{Name: "address", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Address})
+		case "memleakCapacity":
+			if typ.Fields[i].Equals(&def.Field{Name: "memleakCapacity", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.MemleakCapacity})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
+			}
+		case "memleakTrackPercent":
+			if typ.Fields[i].Equals(&def.Field{Name: "memleakTrackPercent", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint64: &res.Temp.MemleakTrackPercent})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
+			}
+		case "gcGenerations":
+			if typ.Fields[i].Equals(&def.Field{Name: "gcGenerations", Type: typeMap.T_BOOLEAN, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], bool: &res.Temp.GcGenerations})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
+			}
+		case "modeMask":
+			if typ.Fields[i].Equals(&def.Field{Name: "modeMask", Type: typeMap.T_INT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], uint32: &res.Temp.ModeMask})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
+			}
+		case "version":
+			if typ.Fields[i].Equals(&def.Field{Name: "version", Type: typeMap.T_STRING, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], string: &res.Temp.Version})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
+			}
+		case "cpuEngine":
+			if typ.Fields[i].Equals(&def.Field{Name: "cpuEngine", Type: typeMap.T_STRING, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i], string: &res.Temp.CpuEngine})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip changed field
 			}
 		default:
-			res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip unknown new field
+			res.Fields = append(res.Fields, BindFieldDatadogProfilerConfig{Field: &typ.Fields[i]}) // skip unknown new field
 		}
 	}
 	return res
 }
 
-type ThreadPark struct {
-	StartTime   uint64
-	Duration    uint64
-	EventThread ThreadRef
-	StackTrace  StackTraceRef
-	ParkedClass ClassRef
-	Timeout     uint64
-	Until       uint64
-	Address     uint64
+type DatadogProfilerConfig struct {
+	StartTime           uint64
+	Duration            uint64
+	EventThread         ThreadRef
+	CpuInterval         uint64
+	WallInterval        uint64
+	AllocInterval       uint64
+	MemleakInterval     uint64
+	MemleakCapacity     uint64
+	MemleakTrackPercent uint64
+	GcGenerations       bool
+	ModeMask            uint32
+	Version             string
+	CpuEngine           string
 }
 
-func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.TypeMap) (pos int, err error) {
+func (this *DatadogProfilerConfig) Parse(data []byte, bind *BindDatadogProfilerConfig, typeMap *def.TypeMap) (pos int, err error) {
 	var (
 		v64_  uint64
 		v32_  uint32
@@ -148,14 +184,6 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 				case typeMap.T_THREAD:
 					if bind.Fields[bindFieldIndex].ThreadRef != nil {
 						*bind.Fields[bindFieldIndex].ThreadRef = ThreadRef(v64_)
-					}
-				case typeMap.T_STACK_TRACE:
-					if bind.Fields[bindFieldIndex].StackTraceRef != nil {
-						*bind.Fields[bindFieldIndex].StackTraceRef = StackTraceRef(v64_)
-					}
-				case typeMap.T_CLASS:
-					if bind.Fields[bindFieldIndex].ClassRef != nil {
-						*bind.Fields[bindFieldIndex].ClassRef = ClassRef(v64_)
 					}
 				}
 			} else {
@@ -258,7 +286,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 					default:
 						return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 					}
-					// skipping
+					if bind.Fields[bindFieldIndex].string != nil {
+						*bind.Fields[bindFieldIndex].string = s_
+					}
 				case typeMap.T_INT:
 					v32_ = uint32(0)
 					for shift = uint(0); ; shift += 7 {
@@ -275,7 +305,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 							break
 						}
 					}
-					// skipping
+					if bind.Fields[bindFieldIndex].uint32 != nil {
+						*bind.Fields[bindFieldIndex].uint32 = v32_
+					}
 				case typeMap.T_LONG:
 					v64_ = 0
 					for shift = uint(0); shift <= 56; shift += 7 {
@@ -303,7 +335,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 					}
 					b_ = data[pos]
 					pos++
-					// skipping
+					if bind.Fields[bindFieldIndex].bool != nil {
+						*bind.Fields[bindFieldIndex].bool = b_ != 0
+					}
 				case typeMap.T_FLOAT:
 					v32_ = uint32(0)
 					for shift = uint(0); ; shift += 7 {

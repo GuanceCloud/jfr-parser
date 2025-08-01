@@ -9,91 +9,71 @@ import (
 	"unsafe"
 )
 
-type BindThreadPark struct {
-	Temp   ThreadPark
-	Fields []BindFieldThreadPark
+type BindMethodSample struct {
+	Temp   MethodSample
+	Fields []BindFieldMethodSample
 }
 
-type BindFieldThreadPark struct {
-	Field         *def.Field
-	uint64        *uint64
-	ThreadRef     *ThreadRef
-	StackTraceRef *StackTraceRef
-	ClassRef      *ClassRef
+type BindFieldMethodSample struct {
+	Field          *def.Field
+	uint64         *uint64
+	ThreadRef      *ThreadRef
+	StackTraceRef  *StackTraceRef
+	ThreadStateRef *ThreadStateRef
+	float32        *float32
 }
 
-func NewBindThreadPark(typ *def.Class, typeMap *def.TypeMap) *BindThreadPark {
-	res := new(BindThreadPark)
-	res.Fields = make([]BindFieldThreadPark, 0, len(typ.Fields))
+func NewBindMethodSample(typ *def.Class, typeMap *def.TypeMap) *BindMethodSample {
+	res := new(BindMethodSample)
+	res.Fields = make([]BindFieldMethodSample, 0, len(typ.Fields))
 	for i := 0; i < len(typ.Fields); i++ {
 		switch typ.Fields[i].Name {
 		case "startTime":
 			if typ.Fields[i].Equals(&def.Field{Name: "startTime", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i], uint64: &res.Temp.StartTime})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
-			}
-		case "duration":
-			if typ.Fields[i].Equals(&def.Field{Name: "duration", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Duration})
-			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip changed field
 			}
 		case "eventThread":
 			if typ.Fields[i].Equals(&def.Field{Name: "eventThread", Type: typeMap.T_THREAD, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ThreadRef: &res.Temp.EventThread})
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i], ThreadRef: &res.Temp.EventThread})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip changed field
 			}
 		case "stackTrace":
 			if typ.Fields[i].Equals(&def.Field{Name: "stackTrace", Type: typeMap.T_STACK_TRACE, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], StackTraceRef: &res.Temp.StackTrace})
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i], StackTraceRef: &res.Temp.StackTrace})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "parkedClass":
-			if typ.Fields[i].Equals(&def.Field{Name: "parkedClass", Type: typeMap.T_CLASS, ConstantPool: true, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], ClassRef: &res.Temp.ParkedClass})
+		case "state":
+			if typ.Fields[i].Equals(&def.Field{Name: "state", Type: typeMap.T_THREAD_STATE, ConstantPool: true, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i], ThreadStateRef: &res.Temp.State})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip changed field
 			}
-		case "timeout":
-			if typ.Fields[i].Equals(&def.Field{Name: "timeout", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Timeout})
+		case "weight":
+			if typ.Fields[i].Equals(&def.Field{Name: "weight", Type: typeMap.T_FLOAT, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i], float32: &res.Temp.Weight})
 			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
-			}
-		case "until":
-			if typ.Fields[i].Equals(&def.Field{Name: "until", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Until})
-			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
-			}
-		case "address":
-			if typ.Fields[i].Equals(&def.Field{Name: "address", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i], uint64: &res.Temp.Address})
-			} else {
-				res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip changed field
+				res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip changed field
 			}
 		default:
-			res.Fields = append(res.Fields, BindFieldThreadPark{Field: &typ.Fields[i]}) // skip unknown new field
+			res.Fields = append(res.Fields, BindFieldMethodSample{Field: &typ.Fields[i]}) // skip unknown new field
 		}
 	}
 	return res
 }
 
-type ThreadPark struct {
+type MethodSample struct {
 	StartTime   uint64
-	Duration    uint64
 	EventThread ThreadRef
 	StackTrace  StackTraceRef
-	ParkedClass ClassRef
-	Timeout     uint64
-	Until       uint64
-	Address     uint64
+	State       ThreadStateRef
+	Weight      float32
 }
 
-func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.TypeMap) (pos int, err error) {
+func (this *MethodSample) Parse(data []byte, bind *BindMethodSample, typeMap *def.TypeMap) (pos int, err error) {
 	var (
 		v64_  uint64
 		v32_  uint32
@@ -153,9 +133,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 					if bind.Fields[bindFieldIndex].StackTraceRef != nil {
 						*bind.Fields[bindFieldIndex].StackTraceRef = StackTraceRef(v64_)
 					}
-				case typeMap.T_CLASS:
-					if bind.Fields[bindFieldIndex].ClassRef != nil {
-						*bind.Fields[bindFieldIndex].ClassRef = ClassRef(v64_)
+				case typeMap.T_THREAD_STATE:
+					if bind.Fields[bindFieldIndex].ThreadStateRef != nil {
+						*bind.Fields[bindFieldIndex].ThreadStateRef = ThreadStateRef(v64_)
 					}
 				}
 			} else {
@@ -320,7 +300,9 @@ func (this *ThreadPark) Parse(data []byte, bind *BindThreadPark, typeMap *def.Ty
 							break
 						}
 					}
-					// skipping
+					if bind.Fields[bindFieldIndex].float32 != nil {
+						*bind.Fields[bindFieldIndex].float32 = *(*float32)(unsafe.Pointer(&v32_))
+					}
 				default:
 					bindFieldType := typeMap.IDMap[bind.Fields[bindFieldIndex].Field.Type]
 					if bindFieldType == nil || len(bindFieldType.Fields) == 0 {

@@ -82,8 +82,12 @@ type Parser struct {
 	Symbols      types2.SymbolList
 	LogLevels    types2.LogLevelList
 	Stacktrace   types2.StackTraceList
+	Strings      types2.StringList
 
 	ExecutionSample             types2.ExecutionSample
+	WallClockSample             types2.WallClockSample
+	Malloc                      types2.Malloc
+	Free                        types2.Free
 	ObjectAllocationInNewTLAB   types2.ObjectAllocationInNewTLAB
 	ObjectAllocationOutsideTLAB types2.ObjectAllocationOutsideTLAB
 	JavaMonitorEnter            types2.JavaMonitorEnter
@@ -110,15 +114,33 @@ type Parser struct {
 	bindLogLevel    *types2.BindLogLevel
 	bindStackFrame  *types2.BindStackFrame
 	bindStackTrace  *types2.BindStackTrace
+	bindString      *types2.BindString
 
-	bindExecutionSample *types2.BindExecutionSample
-
+	bindExecutionSample  *types2.BindExecutionSample
 	bindAllocInNewTLAB   *types2.BindObjectAllocationInNewTLAB
 	bindAllocOutsideTLAB *types2.BindObjectAllocationOutsideTLAB
 	bindMonitorEnter     *types2.BindJavaMonitorEnter
 	bindThreadPark       *types2.BindThreadPark
 	bindLiveObject       *types2.BindLiveObject
 	bindActiveSetting    *types2.BindActiveSetting
+	bindWallClockSample  *types2.BindWallClockSample
+	bindMalloc           *types2.BindMalloc
+	bindFree             *types2.BindFree
+
+	DatadogExecutionSample types2.DataDogExecutionSample
+	DatadogObjectSample    types2.ObjectSample
+	DataDogHeapUsage       types2.HeapUsage
+	// todo others
+
+	bindDataDogExecutionSample        *types2.BindDataDogExecutionSample
+	bindDataDogHeapUsage              *types2.BindHeapUsage
+	bindDataDogHeapLiveObject         *types2.BindHeapLiveObject
+	bindDataDogMethodSample           *types2.BindMethodSample
+	bindDataDogObjectSample           *types2.BindObjectSample
+	bindDatadogProfilerConfig         types2.BindDatadogProfilerConfig
+	bindDatadogProfilerClassRefCache  *types2.BindDatadogProfilerClassRefCache
+	bindDataDogQueueTime              *types2.BindQueueTime
+	bindDataDogWallClockSamplingEpoch *types2.BindWallClockSamplingEpoch
 }
 
 func NewParser(buf []byte, options Options) *Parser {
@@ -155,17 +177,26 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 
 		ttyp := def.TypeID(typ)
 		switch ttyp {
-		case p.TypeMap.T_EXECUTION_SAMPLE:
-			if p.bindExecutionSample == nil {
-				p.pos = pp + int(size) // skip
-				continue
+		case p.TypeMap.T_EXECUTION_SAMPLE, p.TypeMap.T_Datadog_ExecutionSample:
+			if p.bindDataDogExecutionSample != nil {
+				_, err := p.DatadogExecutionSample.Parse(p.buf[p.pos:], p.bindDataDogExecutionSample, &p.TypeMap)
+				if err != nil {
+					return 0, err
+				}
+				p.pos = pp + int(size)
+				return ttyp, nil
 			}
-			_, err := p.ExecutionSample.Parse(p.buf[p.pos:], p.bindExecutionSample, &p.TypeMap)
-			if err != nil {
-				return 0, err
+			if p.bindExecutionSample != nil {
+				_, err := p.ExecutionSample.Parse(p.buf[p.pos:], p.bindExecutionSample, &p.TypeMap)
+				if err != nil {
+					return 0, err
+				}
+				p.pos = pp + int(size)
+				return ttyp, nil
 			}
-			p.pos = pp + int(size)
-			return ttyp, nil
+			p.pos = pp + int(size) // skip
+			continue
+
 		case p.TypeMap.T_ALLOC_IN_NEW_TLAB:
 			if p.bindAllocInNewTLAB == nil {
 				p.pos = pp + int(size) // skip
@@ -228,6 +259,40 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 				continue
 			}
 			_, err := p.ActiveSetting.Parse(p.buf[p.pos:], p.bindActiveSetting, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+
+		case p.TypeMap.T_Datadog_ObjectSample:
+			if p.bindDataDogObjectSample == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DatadogObjectSample.Parse(p.buf[p.pos:], p.bindDataDogObjectSample, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_Datadog_HeapUsage:
+			if p.bindDataDogHeapUsage == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DataDogHeapUsage.Parse(p.buf[p.pos:], p.bindDataDogHeapUsage, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_FREE:
+			if p.bindFree == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.Free.Parse(p.buf[p.pos:], p.bindFree, &p.TypeMap)
 			if err != nil {
 				return 0, err
 			}
@@ -544,6 +609,7 @@ func (p *Parser) checkTypes() error {
 	}
 	p.bindStackTrace = types2.NewBindStackTrace(typeCPStackTrace, &p.TypeMap)
 	p.bindStackFrame = types2.NewBindStackFrame(typeStackFrame, &p.TypeMap)
+	p.bindString = types2.NewBindString(tstring, &p.TypeMap)
 
 	typeExecutionSample := p.TypeMap.NameMap["jdk.ExecutionSample"]
 	typeAllocInNewTLAB := p.TypeMap.NameMap["jdk.ObjectAllocationInNewTLAB"]
@@ -552,6 +618,26 @@ func (p *Parser) checkTypes() error {
 	typeThreadPark := p.TypeMap.NameMap["jdk.ThreadPark"]
 	typeLiveObject := p.TypeMap.NameMap["profiler.LiveObject"]
 	typeActiveSetting := p.TypeMap.NameMap["jdk.ActiveSetting"]
+
+	typeDatadogExecutionSample := p.TypeMap.NameMap["datadog.ExecutionSample"]
+	typeDatadogObjectSample := p.TypeMap.NameMap["datadog.ObjectSample"]
+	//typeDatadogWallClockSamplingEpoch := p.TypeMap.NameMap["datadog.WallClockSamplingEpoch"]
+	//typeDatadogQueueTime := p.TypeMap.NameMap["datadog.QueueTime"]
+	//typeDatadogMethodSample := p.TypeMap.NameMap["datadog.MethodSample"]
+	typeDatadogHeapUsage := p.TypeMap.NameMap["datadog.HeapUsage"]
+
+	if typeDatadogExecutionSample != nil {
+		p.TypeMap.T_Datadog_ExecutionSample = typeDatadogExecutionSample.ID
+		p.bindDataDogExecutionSample = types2.NewBindDataDogExecutionSample(typeDatadogExecutionSample, &p.TypeMap)
+	}
+	if typeDatadogObjectSample != nil {
+		p.TypeMap.T_Datadog_ObjectSample = typeDatadogObjectSample.ID
+		p.bindDataDogObjectSample = types2.NewBindObjectSample(typeDatadogObjectSample, &p.TypeMap)
+	}
+	if typeDatadogHeapUsage != nil {
+		p.TypeMap.T_Datadog_HeapUsage = typeDatadogHeapUsage.ID
+		p.bindDataDogHeapUsage = types2.NewBindHeapUsage(typeDatadogHeapUsage, &p.TypeMap)
+	}
 
 	if typeExecutionSample != nil {
 		p.TypeMap.T_EXECUTION_SAMPLE = typeExecutionSample.ID

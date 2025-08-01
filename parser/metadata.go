@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/grafana/jfr-parser/common/units"
 	"github.com/grafana/jfr-parser/internal/utils"
+	"golang.org/x/text/encoding/charmap"
 	"strconv"
 
 	"github.com/grafana/jfr-parser/parser/types/def"
@@ -399,6 +400,7 @@ func (m *ChunkMetadata) Parse(r Reader) (err error) {
 func (p *Parser) readMeta(pos int) error {
 	p.TypeMap.IDMap = make(map[def.TypeID]*def.Class, 43+5)
 	p.TypeMap.NameMap = make(map[string]*def.Class, 43+5)
+	p.TypeMap.ISO8859_1Decoder = charmap.ISO8859_1.NewDecoder()
 
 	if err := p.seek(pos); err != nil {
 		return err
@@ -482,7 +484,7 @@ func (p *Parser) readMeta(pos int) error {
 					}
 
 				}
-				//fmt.Println(cls.String())
+				fmt.Println(cls.String())
 				p.TypeMap.IDMap[cls.ID] = cls
 				p.TypeMap.NameMap[cls.Name] = cls
 
@@ -498,6 +500,7 @@ func (p *Parser) readMeta(pos int) error {
 	}
 	return nil
 }
+
 func parseElement(r Reader, s []string, chunkHeader *Header, e Element) error {
 	n, err := r.VarInt()
 	if err != nil {

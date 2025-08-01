@@ -113,33 +113,35 @@ func (this *LiveObject) Parse(data []byte, bind *BindLiveObject, typeMap *def.Ty
 		}
 		for bindArrayIndex := 0; bindArrayIndex < bindArraySize; bindArrayIndex++ {
 			if bind.Fields[bindFieldIndex].Field.ConstantPool {
-				v32_ = uint32(0)
-				for shift = uint(0); ; shift += 7 {
-					if shift >= 32 {
-						return 0, def.ErrIntOverflow
-					}
+				v64_ = 0
+				for shift = uint(0); shift <= 56; shift += 7 {
 					if pos >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
 					b_ = data[pos]
 					pos++
-					v32_ |= uint32(b_&0x7F) << shift
-					if b_ < 0x80 {
+					if shift == 56 {
+						v64_ |= uint64(b_&0xFF) << shift
 						break
+					} else {
+						v64_ |= uint64(b_&0x7F) << shift
+						if b_ < 0x80 {
+							break
+						}
 					}
 				}
 				switch bind.Fields[bindFieldIndex].Field.Type {
 				case typeMap.T_THREAD:
 					if bind.Fields[bindFieldIndex].ThreadRef != nil {
-						*bind.Fields[bindFieldIndex].ThreadRef = ThreadRef(v32_)
+						*bind.Fields[bindFieldIndex].ThreadRef = ThreadRef(v64_)
 					}
 				case typeMap.T_STACK_TRACE:
 					if bind.Fields[bindFieldIndex].StackTraceRef != nil {
-						*bind.Fields[bindFieldIndex].StackTraceRef = StackTraceRef(v32_)
+						*bind.Fields[bindFieldIndex].StackTraceRef = StackTraceRef(v64_)
 					}
 				case typeMap.T_CLASS:
 					if bind.Fields[bindFieldIndex].ClassRef != nil {
-						*bind.Fields[bindFieldIndex].ClassRef = ClassRef(v32_)
+						*bind.Fields[bindFieldIndex].ClassRef = ClassRef(v64_)
 					}
 				}
 			} else {
@@ -179,6 +181,66 @@ func (this *LiveObject) Parse(data []byte, bind *BindLiveObject, typeMap *def.Ty
 						bs := data[pos : pos+int(v32_)]
 						s_ = *(*string)(unsafe.Pointer(&bs))
 						pos += int(v32_)
+					case 5:
+						v32_ = uint32(0)
+						for shift = uint(0); ; shift += 7 {
+							if shift >= 32 {
+								return 0, def.ErrIntOverflow
+							}
+							if pos >= l {
+								return 0, io.ErrUnexpectedEOF
+							}
+							b_ = data[pos]
+							pos++
+							v32_ |= uint32(b_&0x7F) << shift
+							if b_ < 0x80 {
+								break
+							}
+						}
+						if pos+int(v32_) > l {
+							return 0, io.ErrUnexpectedEOF
+						}
+						bs := data[pos : pos+int(v32_)]
+						bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+						s_ = *(*string)(unsafe.Pointer(&bs))
+						pos += int(v32_)
+					case 4:
+						v32_ = uint32(0)
+						for shift = uint(0); ; shift += 7 {
+							if shift >= 32 {
+								return 0, def.ErrIntOverflow
+							}
+							if pos >= l {
+								return 0, io.ErrUnexpectedEOF
+							}
+							b_ = data[pos]
+							pos++
+							v32_ |= uint32(b_&0x7F) << shift
+							if b_ < 0x80 {
+								break
+							}
+						}
+						bl := int(v32_)
+						buf := make([]rune, bl)
+						for i := 0; i < bl; i++ {
+							v32_ = uint32(0)
+							for shift = uint(0); ; shift += 7 {
+								if shift >= 32 {
+									return 0, def.ErrIntOverflow
+								}
+								if pos >= l {
+									return 0, io.ErrUnexpectedEOF
+								}
+								b_ = data[pos]
+								pos++
+								v32_ |= uint32(b_&0x7F) << shift
+								if b_ < 0x80 {
+									break
+								}
+							}
+							buf[i] = rune(v32_)
+						}
+						s_ = string(buf)
 					default:
 						return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 					}
@@ -322,6 +384,66 @@ func (this *LiveObject) Parse(data []byte, bind *BindLiveObject, typeMap *def.Ty
 									bs := data[pos : pos+int(v32_)]
 									s_ = *(*string)(unsafe.Pointer(&bs))
 									pos += int(v32_)
+								case 5:
+									v32_ = uint32(0)
+									for shift = uint(0); ; shift += 7 {
+										if shift >= 32 {
+											return 0, def.ErrIntOverflow
+										}
+										if pos >= l {
+											return 0, io.ErrUnexpectedEOF
+										}
+										b_ = data[pos]
+										pos++
+										v32_ |= uint32(b_&0x7F) << shift
+										if b_ < 0x80 {
+											break
+										}
+									}
+									if pos+int(v32_) > l {
+										return 0, io.ErrUnexpectedEOF
+									}
+									bs := data[pos : pos+int(v32_)]
+									bs, _ = typeMap.ISO8859_1Decoder.Bytes(bs)
+									s_ = *(*string)(unsafe.Pointer(&bs))
+									pos += int(v32_)
+								case 4:
+									v32_ = uint32(0)
+									for shift = uint(0); ; shift += 7 {
+										if shift >= 32 {
+											return 0, def.ErrIntOverflow
+										}
+										if pos >= l {
+											return 0, io.ErrUnexpectedEOF
+										}
+										b_ = data[pos]
+										pos++
+										v32_ |= uint32(b_&0x7F) << shift
+										if b_ < 0x80 {
+											break
+										}
+									}
+									bl := int(v32_)
+									buf := make([]rune, bl)
+									for i := 0; i < bl; i++ {
+										v32_ = uint32(0)
+										for shift = uint(0); ; shift += 7 {
+											if shift >= 32 {
+												return 0, def.ErrIntOverflow
+											}
+											if pos >= l {
+												return 0, io.ErrUnexpectedEOF
+											}
+											b_ = data[pos]
+											pos++
+											v32_ |= uint32(b_&0x7F) << shift
+											if b_ < 0x80 {
+												break
+											}
+										}
+										buf[i] = rune(v32_)
+									}
+									s_ = string(buf)
 								default:
 									return 0, fmt.Errorf("unknown string type %d at %d", b_, pos)
 								}
