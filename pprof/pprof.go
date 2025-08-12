@@ -108,6 +108,7 @@ func (b *jfrPprofBuilders) addStacktrace(sampleType int64, contextID uint64, ref
 	}
 	vs := make([]int64, len(values))
 	addValues(vs)
+	// add log
 	p.AddExternalSampleWithLabels(locations, vs, b.contextLabels(contextID), b.jfrLabels, uint64(ref), contextID)
 }
 
@@ -151,7 +152,7 @@ func (b *jfrPprofBuilders) profileBuilderForSampleType(sampleType int64) *Profil
 		builder.AddSampleType("live", "count")
 		builder.PeriodType("objects", "count")
 		metric = "memory"
-	case sampleTypeDataDogHeapUsage:
+	case sampleTypeDataDogHeapUsage: // 没有调用链。
 		builder.AddSampleType("size", "bytes")
 		builder.PeriodType("space", "bytes")
 		metric = "memory"
@@ -159,15 +160,15 @@ func (b *jfrPprofBuilders) profileBuilderForSampleType(sampleType int64) *Profil
 		builder.AddSampleType("size", "bytes")
 		builder.AddSampleType("weight", "count")
 		builder.PeriodType("space", "count")
-		metric = "memory"
+		metric = "object-memory"
 	case sampleTypeDatadogExecutionSample:
-		builder.AddSampleType("weight", "count")
-		builder.PeriodType("space", "count")
-		metric = "cpu"
+		builder.AddSampleType("cpu", "nanoseconds")
+		builder.PeriodType("cpu", "nanoseconds")
+		metric = "process_cpu"
 	case sampleDatadogMethodSample:
 		builder.AddSampleType("weight", "count")
-		builder.PeriodType("space", "count")
-		metric = "memory"
+		builder.PeriodType("space", "bytes")
+		metric = "method-memory"
 	}
 	builder.MetricName(metric)
 	b.builders[sampleType] = builder

@@ -41,8 +41,8 @@ type formatter interface {
 func main() {
 	c := new(command)
 	//parseCommand(c)
-	//c.src = "/home/songlq/tmp/dkjfr/metric012025-07-25-10-38.jfr"
-	c.src = "/home/songlq/tmp/dkjfr/recording.jfr"
+	c.src = "/home/songlq/tmp/dkjfr/metric012025-07-25-10-38.jfr"
+	//c.src = "/home/songlq/tmp/dkjfr/recording.jfr"
 	c.dest = "/home/songlq/tmp/dkjfr/json"
 	c.format = "pprof"
 

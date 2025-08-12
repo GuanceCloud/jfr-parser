@@ -43,7 +43,6 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 
 		switch typ {
 		case parser.TypeMap.T_EXECUTION_SAMPLE:
-			fmt.Println("into ExecutionSample")
 			ts := parser.GetThreadState(parser.ExecutionSample.State)
 			if ts != nil && ts.Name != "STATE_SLEEPING" {
 				builders.addStacktrace(sampleTypeCPU, parser.ExecutionSample.ContextId, parser.ExecutionSample.StackTrace, values[:1])
@@ -68,11 +67,23 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 		case parser.TypeMap.T_Datadog_ObjectSample:
 			values[0] = int64(parser.DatadogObjectSample.Size)
 			values[1] = int64(parser.DatadogObjectSample.Weight)
+			//fmt.Printf("size=%d weight=%d \n", values[0], values[1])
+			//fmt.Printf("weight=%f \n", parser.DatadogObjectSample.Weight)
 			builders.addStacktrace(sampleTypeDatadogObjectSample, 0, parser.DatadogObjectSample.StackTrace, values[:2])
 		case parser.TypeMap.T_Datadog_ExecutionSample:
-			fmt.Println(parser.DatadogExecutionSample.Weight)
-			values[0] = int64(parser.DatadogExecutionSample.Weight)
-			builders.addStacktrace(sampleTypeDatadogExecutionSample, 0, parser.DatadogExecutionSample.StackTrace, values[:1])
+			//fmt.Printf("weight =%d \n", parser.DatadogExecutionSample.Weight)
+			//fmt.Printf("State =%d \n", parser.DatadogExecutionSample.State)
+			//values[0] = int64(parser.DatadogExecutionSample.Weight)
+
+			//builders.addStacktrace(sampleTypeDatadogExecutionSample, 0, parser.DatadogExecutionSample.StackTrace, values[:1])
+			//fmt.Println("into ExecutionSample")
+			ts := parser.GetThreadState(parser.DatadogExecutionSample.State)
+			if ts != nil && ts.Name != "STATE_SLEEPING" {
+				builders.addStacktrace(sampleTypeCPU, parser.DatadogExecutionSample.ContextId, parser.DatadogExecutionSample.StackTrace, values[:1])
+			}
+			if event == "wall" {
+				builders.addStacktrace(sampleTypeWall, parser.DatadogExecutionSample.ContextId, parser.DatadogExecutionSample.StackTrace, values[:1])
+			}
 		//case parser.TypeMap.T_Datadog_HeapUsage: 没有调用站
 		//	values[0] = int64(parser.DataDogHeapUsage.Size)
 		//	builders.addStacktrace(sampleTypeDatadogObjectSample, 0, parser.DataDogHeapUsage.s, values[:2])
@@ -84,7 +95,5 @@ func parse(parser *parser.Parser, piOriginal *ParseInput, jfrLabels *LabelsSnaps
 	}
 
 	result = builders.build(event)
-	fmt.Printf("result len=%d \n", len(result.Profiles))
-	fmt.Printf("idcount = %+v \n", idCount)
 	return result, nil
 }

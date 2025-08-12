@@ -58,6 +58,12 @@ func NewBindDataDogExecutionSample(typ *def.Class, typeMap *def.TypeMap) *BindDa
 			} else {
 				res.Fields = append(res.Fields, BindFieldDataDogExecutionSample{Field: &typ.Fields[i]}) // skip changed field
 			}
+		case "contextId":
+			if typ.Fields[i].Equals(&def.Field{Name: "contextId", Type: typeMap.T_LONG, ConstantPool: false, Array: false}) {
+				res.Fields = append(res.Fields, BindFieldDataDogExecutionSample{Field: &typ.Fields[i], uint64: &res.Temp.ContextId})
+			} else {
+				res.Fields = append(res.Fields, BindFieldDataDogExecutionSample{Field: &typ.Fields[i]}) // skip changed field
+			}
 		default:
 			res.Fields = append(res.Fields, BindFieldDataDogExecutionSample{Field: &typ.Fields[i]}) // skip unknown new field
 		}
@@ -71,6 +77,7 @@ type DataDogExecutionSample struct {
 	StackTrace    StackTraceRef
 	State         ThreadStateRef
 	Weight        uint64
+	ContextId     uint64
 }
 
 func (this *DataDogExecutionSample) Parse(data []byte, bind *BindDataDogExecutionSample, typeMap *def.TypeMap) (pos int, err error) {
