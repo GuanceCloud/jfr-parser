@@ -1,14 +1,5 @@
 package format
 
-import (
-	"encoding/json"
-	"fmt"
-	"path/filepath"
-	"time"
-
-	"github.com/grafana/jfr-parser/pprof"
-)
-
 type formatterPprof struct{}
 
 func NewFormatterPprof() *formatterPprof {
@@ -16,30 +7,30 @@ func NewFormatterPprof() *formatterPprof {
 }
 
 func (f *formatterPprof) Format(buf []byte, dest string) ([]string, [][]byte, error) {
-	pi := &pprof.ParseInput{
-		StartTime:  time.Now(),
-		EndTime:    time.Now(),
-		SampleRate: 100,
-	}
-	profiles, err := pprof.ParseJFR(buf, pi, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	data := make([][]byte, 0)
-	dests := make([]string, 0)
-	destDir := filepath.Dir(dest)
-	destBase := filepath.Base(dest)
-	for i := 0; i < len(profiles.Profiles); i++ {
-		//fmt.Sprintf("%s.%d.%s",profiles.Profiles[i].Metric,i)
-		filename := fmt.Sprintf("%s.%d.%s", profiles.Profiles[i].Metric, i, destBase)
-		dests = append(dests, filepath.Join(destDir, filename))
-
-		bs, err := json.MarshalIndent(profiles.Profiles[i].Profile, "", "	")
+	/*	pi := &pprof.ParseInput{
+			StartTime:  time.Now(),
+			EndTime:    time.Now(),
+			SampleRate: 100,
+		}
+		profiles, err := pprof.ParseJFR(buf, pi, nil)
 		if err != nil {
 			return nil, nil, err
 		}
-		data = append(data, bs)
-	}
-	return dests, data, nil
+
+		data := make([][]byte, 0)
+		dests := make([]string, 0)
+		destDir := filepath.Dir(dest)
+		destBase := filepath.Base(dest)
+		for i := 0; i < len(profiles.Profiles); i++ {
+			//fmt.Sprintf("%s.%d.%s",profiles.Profiles[i].Metric,i)
+			filename := fmt.Sprintf("%s.%d.%s", profiles.Profiles[i].Metric, i, destBase)
+			dests = append(dests, filepath.Join(destDir, filename))
+
+			bs, err := json.MarshalIndent(profiles.Profiles[i].Profile, "", "	")
+			if err != nil {
+				return nil, nil, err
+			}
+			data = append(data, bs)
+		}*/
+	return nil, nil, nil
 }
