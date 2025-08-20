@@ -1,6 +1,6 @@
 module github.com/grafana/jfr-parser
 
-go 1.21
+go 1.19
 
 require (
 	github.com/GuanceCloud/zipstream v0.1.0

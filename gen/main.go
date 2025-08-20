@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/format"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/grafana/jfr-parser/parser/types/def"
@@ -89,15 +88,26 @@ func main() {
 	write("types/datadog_profiler_class_ref_cache.go", generate(&Type_datadogProfilerClassRefCache, options{}))
 	write("types/datadog_profiler_config.go", generate(&Type_DatadogProfilerConfig, options{}))
 	//write("types/datadog_execution_mode.go", generate(&Type_ExecutionMode, options{}))
-	write("types/datadog_object_sample.go", generate(&Type_datadogObjectSample, options{}))
-	write("types/datadog_heapLive_object.go", generate(&Type_datadog_HeapLiveObject, options{}))
-	write("types/datadog_heap_usage.go", generate(&Type_datadog_HeapUsage, options{}))
-	write("types/datadog_method_sample.go", generate(&Type_datadog_MethodSample, options{}))
+	write("types/datadog_object_sample.go", generate(&Type_DatadogObjectSample, options{}))
+	write("types/datadog_heapLive_object.go", generate(&Type_Datadog_HeapLiveObject, options{}))
+	write("types/datadog_heap_usage.go", generate(&Type_Datadog_HeapUsage, options{}))
+	write("types/datadog_method_sample.go", generate(&Type_Datadog_MethodSample, options{}))
 	write("types/datadog_profiler_counter_name.go", generate(&Type_CounterName, options{}))
 	//write("types/datadog_profiler_counter.go", generate(&Type_ProfilerCounter, options{cpool: true}))
 	write("types/datadog_queue_time.go", generate(&Type_QueueTime, options{}))
 	write("types/datadog_wall_clock_sampling_epoch.go", generate(&Type_WallClockSamplingEpoch, options{}))
 	write("types/datadog_execution_sample.go", generate(&Type_datadogExecutionSample, options{}))
+
+	write("types/datadog_exctption_sample.go", generate(&Type_DatadogException_sample, options{}))
+	write("types/types_gcname.go", generate(&Type_Types_GCName, options{}))
+	write("types/types_gccause.go", generate(&Type_Types_GCCause, options{}))
+	write("types/types_g1yctype.go", generate(&Type_G1YCType, options{}))
+	write("types/garbage_collection.go", generate(&Type_GarbageCollection, options{}))
+	write("types/system_gc.go", generate(&Type_SystemGC, options{}))
+	write("types/parallel_old_garbage_collection.go", generate(&Type_ParallelOldGarbageCollection, options{}))
+	write("types/young_garbage_collection.go", generate(&Type_YoungGarbageCollection, options{}))
+	write("types/g1_garbage_collection.go", generate(&Type_G1GarbageCollection, options{}))
+	write("types/old_garbage_collection.go", generate(&Type_OldGarbageCollection, options{}))
 }
 
 func write(dst, s string) {
@@ -147,6 +157,34 @@ func TypeForCPoolID(ID def.TypeID) *def.Class {
 		return &Type_ExecutionMode
 	case T_CounterName:
 		return &Type_CounterName
+	case T_EXECUTION_SAMPLE:
+		return &Type_datadogExecutionSample
+	case T_ObjectSample:
+		return &Type_DatadogObjectSample
+	case T_Datadog_MethodSample:
+		return &Type_Datadog_MethodSample
+	case T_Datadog_Excepion_Sample:
+		return &Type_DatadogException_sample
+	case T_GCName:
+		return &Type_Types_GCName
+	case T_GCCause:
+		return &Type_Types_GCCause
+	case T_G1YCType:
+		return &Type_G1YCType
+	case T_WallClockSamplingEpoch:
+		return &Type_WallClockSamplingEpoch
+	case T_GarbageCollection:
+		return &Type_GarbageCollection
+	case T_SystemGC:
+		return &Type_SystemGC
+	case T_ParallelOldGarbageCollection:
+		return &Type_ParallelOldGarbageCollection
+	case T_YoungGarbageCollection:
+		return &Type_YoungGarbageCollection
+	case T_OldGarbageCollection:
+		return &Type_OldGarbageCollection
+	case T_G1GarbageCollection:
+		return &Type_G1GarbageCollection
 	default:
 		panic("unknown type " + TypeID2Sym(ID))
 	}
@@ -174,7 +212,14 @@ func generate(typ *def.Class, opt options) string {
 
 	res += fmt.Sprintf("type %s struct {\n", name(typ))
 	for _, field := range typ.Fields {
-		if slices.Contains(opt.skipFields, field.Name) {
+		skip := false
+		for _, skipField := range opt.skipFields {
+			if field.Name == skipField {
+				skip = true
+				break
+			}
+		}
+		if skip {
 			res += fmt.Sprintf("	// skip %s\n", field.Name)
 		} else {
 			if field.Array {
@@ -507,7 +552,14 @@ func generateBinding(typ *def.Class, opt options) string {
 	for i := 0; i < len(typ.Fields); i++ {
 
 		res += fmt.Sprintf("		case \"%s\":\n", typ.Fields[i].Name)
-		if slices.Contains(opt.skipFields, typ.Fields[i].Name) {
+		skip := false
+		for _, field := range opt.skipFields {
+			if field == typ.Fields[i].Name {
+				skip = true
+				break
+			}
+		}
+		if skip {
 			res += fmt.Sprintf("			res.Fields = append(res.Fields, %s{Field: &typ.Fields[i]}) // skip to save mem\n", bindFieldName(typ))
 		} else {
 			res += fmt.Sprintf("			if typ.Fields[i].Equals(&def.Field{Name: \"%s\", Type: typeMap.%s, ConstantPool: %v, Array: %v}) {\n", typ.Fields[i].Name, TypeID2Sym(typ.Fields[i].Type), typ.Fields[i].ConstantPool, typ.Fields[i].Array)

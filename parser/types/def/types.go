@@ -44,7 +44,20 @@ type TypeMap struct {
 
 	T_Datadog_ExecutionSample TypeID
 	T_Datadog_HeapUsage       TypeID
+	T_Datadog_HeapliveObject  TypeID
 	T_Datadog_ObjectSample    TypeID
 
 	ISO8859_1Decoder *encoding.Decoder
+
+	T_G1YCType                         TypeID
+	T_Datadog_ExceptionSample          TypeID
+	T_JDK_GarbageCollection            TypeID
+	T_JDK_SystemGC                     TypeID
+	T_JDK_ParallelOldGarbageCollection TypeID
+	T_JDK_YoungGarbageCollection       TypeID
+	T_JDK_G1GarbageCollection          TypeID
+	T_JDK_OldGarbageCollection         TypeID
+	T_Datadog_MethodSample             TypeID
+	T_GCName                           TypeID
+	T_GCCause                          TypeID
 }

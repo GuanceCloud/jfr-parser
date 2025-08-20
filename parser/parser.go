@@ -127,20 +127,37 @@ type Parser struct {
 	bindMalloc           *types2.BindMalloc
 	bindFree             *types2.BindFree
 
-	DatadogExecutionSample types2.DataDogExecutionSample
-	DatadogObjectSample    types2.ObjectSample
-	DataDogHeapUsage       types2.HeapUsage
+	DatadogExecutionSample       types2.DataDogExecutionSample
+	DatadogObjectSample          types2.ObjectSample
+	DatadogHeapUsage             types2.HeapUsage
+	DatadogHeapLiveObject        types2.HeapLiveObject
+	DatadagMethodSample          types2.MethodSample
+	DatadogExceptionSample       types2.ExceptionSample
+	DatadogGarbageCollection     types2.GarbageCollection
+	SystemGC                     types2.SystemGC
+	ParallelOldGarbageCollection types2.ParallelOldGarbageCollection
+	YoungGarbageCollection       types2.YoungGarbageCollection
+	G1GarbageCollection          types2.G1GarbageCollection
+	OldGarbageCollection         types2.OldGarbageCollection
+
 	// todo others
 
-	bindDataDogExecutionSample        *types2.BindDataDogExecutionSample
-	bindDataDogHeapUsage              *types2.BindHeapUsage
-	bindDataDogHeapLiveObject         *types2.BindHeapLiveObject
-	bindDataDogMethodSample           *types2.BindMethodSample
-	bindDataDogObjectSample           *types2.BindObjectSample
-	bindDatadogProfilerConfig         types2.BindDatadogProfilerConfig
-	bindDatadogProfilerClassRefCache  *types2.BindDatadogProfilerClassRefCache
-	bindDataDogQueueTime              *types2.BindQueueTime
-	bindDataDogWallClockSamplingEpoch *types2.BindWallClockSamplingEpoch
+	bindDataDogExecutionSample          *types2.BindDataDogExecutionSample
+	bindDataDogHeapUsage                *types2.BindHeapUsage
+	bindDataDogHeapLiveObject           *types2.BindHeapLiveObject
+	bindDataDogMethodSample             *types2.BindMethodSample
+	bindDataDogObjectSample             *types2.BindObjectSample
+	bindDatadogProfilerConfig           types2.BindDatadogProfilerConfig
+	bindDatadogProfilerClassRefCache    *types2.BindDatadogProfilerClassRefCache
+	bindDataDogQueueTime                *types2.BindQueueTime
+	bindDataDogWallClockSamplingEpoch   *types2.BindWallClockSamplingEpoch
+	bindDataDogExceptionSample          *types2.BindExceptionSample
+	bindJDKGarbageCollection            *types2.BindGarbageCollection
+	bindJDKSystemGC                     *types2.BindSystemGC
+	bindJDKParallelOldGarbageCollection *types2.BindParallelOldGarbageCollection
+	bindJDKYoungGarbageCollection       *types2.BindYoungGarbageCollection
+	bindJDKG1GarbageCollection          *types2.BindG1GarbageCollection
+	bindJDKOldGarbageCollection         *types2.BindOldGarbageCollection
 }
 
 func NewParser(buf []byte, options Options) *Parser {
@@ -252,7 +269,17 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			}
 			p.pos = pp + int(size)
 			return ttyp, nil
-
+		case p.TypeMap.T_Datadog_HeapliveObject:
+			if p.bindDataDogHeapLiveObject == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DatadogHeapLiveObject.Parse(p.buf[p.pos:], p.bindDataDogHeapLiveObject, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
 		case p.TypeMap.T_ACTIVE_SETTING:
 			if p.bindActiveSetting == nil {
 				p.pos = pp + int(size) // skip
@@ -281,7 +308,7 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 				p.pos = pp + int(size) // skip
 				continue
 			}
-			_, err := p.DataDogHeapUsage.Parse(p.buf[p.pos:], p.bindDataDogHeapUsage, &p.TypeMap)
+			_, err := p.DatadogHeapUsage.Parse(p.buf[p.pos:], p.bindDataDogHeapUsage, &p.TypeMap)
 			if err != nil {
 				return 0, err
 			}
@@ -298,8 +325,97 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			}
 			p.pos = pp + int(size)
 			return ttyp, nil
+		case p.TypeMap.T_Datadog_MethodSample:
+			if p.bindDataDogMethodSample == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DatadagMethodSample.Parse(p.buf[p.pos:], p.bindDataDogMethodSample, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+
+		case p.TypeMap.T_Datadog_ExceptionSample:
+			if p.bindDataDogExceptionSample == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DatadogExceptionSample.Parse(p.buf[p.pos:], p.bindDataDogExceptionSample, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_GarbageCollection:
+			if p.bindJDKGarbageCollection == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.DatadogGarbageCollection.Parse(p.buf[p.pos:], p.bindJDKGarbageCollection, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_SystemGC:
+			if p.bindJDKSystemGC == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.SystemGC.Parse(p.buf[p.pos:], p.bindJDKSystemGC, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_ParallelOldGarbageCollection:
+			if p.bindJDKOldGarbageCollection == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.OldGarbageCollection.Parse(p.buf[p.pos:], p.bindJDKOldGarbageCollection, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_YoungGarbageCollection:
+			if p.bindJDKYoungGarbageCollection == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.YoungGarbageCollection.Parse(p.buf[p.pos:], p.bindJDKYoungGarbageCollection, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_G1GarbageCollection:
+			if p.bindJDKG1GarbageCollection == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.G1GarbageCollection.Parse(p.buf[p.pos:], p.bindJDKG1GarbageCollection, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
+		case p.TypeMap.T_JDK_OldGarbageCollection:
+			if p.bindJDKOldGarbageCollection == nil {
+				p.pos = pp + int(size) // skip
+				continue
+			}
+			_, err := p.OldGarbageCollection.Parse(p.buf[p.pos:], p.bindJDKOldGarbageCollection, &p.TypeMap)
+			if err != nil {
+				return 0, err
+			}
+			p.pos = pp + int(size)
+			return ttyp, nil
 		default:
-			//fmt.Printf("skipping %s %v\n", def.TypeID2Sym(ttyp), ttyp)
+			fmt.Printf("skipping %s %v\n", ttyp, ttyp)
 			p.pos = pp + int(size)
 		}
 	}
@@ -623,8 +739,9 @@ func (p *Parser) checkTypes() error {
 	typeDatadogObjectSample := p.TypeMap.NameMap["datadog.ObjectSample"]
 	//typeDatadogWallClockSamplingEpoch := p.TypeMap.NameMap["datadog.WallClockSamplingEpoch"]
 	//typeDatadogQueueTime := p.TypeMap.NameMap["datadog.QueueTime"]
-	//typeDatadogMethodSample := p.TypeMap.NameMap["datadog.MethodSample"]
+	typeDatadogMethodSample := p.TypeMap.NameMap["datadog.MethodSample"]
 	typeDatadogHeapUsage := p.TypeMap.NameMap["datadog.HeapUsage"]
+	typeDatadogHeapliveObject := p.TypeMap.NameMap["datadog.HeapLiveObject"]
 
 	if typeDatadogExecutionSample != nil {
 		p.TypeMap.T_Datadog_ExecutionSample = typeDatadogExecutionSample.ID
@@ -634,11 +751,60 @@ func (p *Parser) checkTypes() error {
 		p.TypeMap.T_Datadog_ObjectSample = typeDatadogObjectSample.ID
 		p.bindDataDogObjectSample = types2.NewBindObjectSample(typeDatadogObjectSample, &p.TypeMap)
 	}
+	if typeDatadogMethodSample != nil {
+		p.TypeMap.T_Datadog_MethodSample = typeDatadogMethodSample.ID
+		p.bindDataDogMethodSample = types2.NewBindMethodSample(typeDatadogMethodSample, &p.TypeMap)
+	}
+
 	if typeDatadogHeapUsage != nil {
 		p.TypeMap.T_Datadog_HeapUsage = typeDatadogHeapUsage.ID
 		p.bindDataDogHeapUsage = types2.NewBindHeapUsage(typeDatadogHeapUsage, &p.TypeMap)
 	}
+	if typeDatadogHeapliveObject != nil {
+		p.TypeMap.T_Datadog_HeapliveObject = typeDatadogHeapliveObject.ID
+		p.bindDataDogHeapLiveObject = types2.NewBindHeapLiveObject(typeDatadogHeapliveObject, &p.TypeMap)
+	}
 
+	// GC metrics
+	typeExceptionSample := p.TypeMap.NameMap["datadog.ExceptionSample"]
+	if typeExceptionSample != nil {
+		p.TypeMap.T_Datadog_ExceptionSample = typeExceptionSample.ID
+		p.bindDataDogExceptionSample = types2.NewBindExceptionSample(typeExceptionSample, &p.TypeMap)
+	}
+	typeTypesGCName := p.TypeMap.NameMap["jdk.GarbageCollection"]
+	if typeTypesGCName != nil {
+		p.TypeMap.T_JDK_GarbageCollection = typeTypesGCName.ID
+		p.bindJDKGarbageCollection = types2.NewBindGarbageCollection(typeTypesGCName, &p.TypeMap)
+	}
+
+	typeSystemGC := p.TypeMap.NameMap["jdk.SystemGC"]
+	if typeSystemGC != nil {
+		p.TypeMap.T_JDK_SystemGC = typeSystemGC.ID
+		p.bindJDKSystemGC = types2.NewBindSystemGC(typeSystemGC, &p.TypeMap)
+	}
+	typeParallelOldGarbageCollection := p.TypeMap.NameMap["jdk.ParallelOldGarbageCollection"]
+	if typeParallelOldGarbageCollection != nil {
+		p.TypeMap.T_JDK_ParallelOldGarbageCollection = typeParallelOldGarbageCollection.ID
+		p.bindJDKParallelOldGarbageCollection = types2.NewBindParallelOldGarbageCollection(typeParallelOldGarbageCollection, &p.TypeMap)
+	}
+	typeYoungGarbageCollection := p.TypeMap.NameMap["jdk.YoungGarbageCollection"]
+	if typeYoungGarbageCollection != nil {
+		p.TypeMap.T_JDK_YoungGarbageCollection = typeYoungGarbageCollection.ID
+		p.bindJDKYoungGarbageCollection = types2.NewBindYoungGarbageCollection(typeYoungGarbageCollection, &p.TypeMap)
+	}
+	typeG1GarbageCollection := p.TypeMap.NameMap["jdk.G1GarbageCollection"]
+	if typeG1GarbageCollection != nil {
+		p.TypeMap.T_JDK_G1GarbageCollection = typeG1GarbageCollection.ID
+		p.bindJDKG1GarbageCollection = types2.NewBindG1GarbageCollection(typeG1GarbageCollection, &p.TypeMap)
+	}
+	typeOldGarbageCollection := p.TypeMap.NameMap["jdk.OldGarbageCollection"]
+	if typeOldGarbageCollection != nil {
+		p.TypeMap.T_JDK_OldGarbageCollection = typeOldGarbageCollection.ID
+		p.bindJDKOldGarbageCollection = types2.NewBindOldGarbageCollection(typeOldGarbageCollection, &p.TypeMap)
+	}
+	// GC metrics
+
+	// 内存
 	if typeExecutionSample != nil {
 		p.TypeMap.T_EXECUTION_SAMPLE = typeExecutionSample.ID
 		p.bindExecutionSample = types2.NewBindExecutionSample(typeExecutionSample, &p.TypeMap)

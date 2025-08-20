@@ -65,6 +65,20 @@ var (
 	T_UNSIGNED                     = def.TypeID(207)
 	T_PERCENTAGE                   = def.TypeID(208)
 	T_ALLOC_SAMPLE                 = def.TypeID(209)
+
+	T_ObjectSample                 = def.TypeID(103)
+	T_Datadog_MethodSample         = def.TypeID(102)
+	T_Datadog_Excepion_Sample      = def.TypeID(5818)
+	T_GCName                       = def.TypeID(169)
+	T_GCCause                      = def.TypeID(170)
+	T_G1YCType                     = def.TypeID(173)
+	T_WallClockSamplingEpoch       = def.TypeID(118)
+	T_GarbageCollection            = def.TypeID(35)
+	T_SystemGC                     = def.TypeID(36)
+	T_ParallelOldGarbageCollection = def.TypeID(37)
+	T_YoungGarbageCollection       = def.TypeID(38)
+	T_OldGarbageCollection         = def.TypeID(39)
+	T_G1GarbageCollection          = def.TypeID(40)
 )
 
 func TypeID2Sym(id def.TypeID) string {
@@ -186,7 +200,48 @@ func TypeID2Sym(id def.TypeID) string {
 		return "T_DatadogProfilerClassRefCache"
 	case T_ProfilerCounter:
 		return "T_ProfilerCounter"
+		/*
+			T_ObjectSample                 = def.TypeID(103)
+			T_Datadog_MethodSample         = def.TypeID(102)
+			T_Datadog_Excepion_Sample      = def.TypeID(5818)
+			T_GCName                       = def.TypeID(169)
+			T_GCCause                      = def.TypeID(170)
+			T_G1YCType                     = def.TypeID(173)
+			T_WallClockSamplingEpoch       = def.TypeID(118)
+			T_GarbageCollection            = def.TypeID(35)
+			T_SystemGC                     = def.TypeID(36)
+			T_ParallelOldGarbageCollection = def.TypeID(37)
+			T_YoungGarbageCollection       = def.TypeID(38)
+			T_OldGarbageCollection         = def.TypeID(39)
+			T_G1GarbageCollection          = def.TypeID(40)
 
+		*/
+	case T_ObjectSample:
+		return "T_ObjectSample"
+	case T_Datadog_MethodSample:
+		return "T_Datadog_MethodSample"
+	case T_Datadog_Excepion_Sample:
+		return "T_Datadog_Excepion_Sample"
+	case T_GCName:
+		return "T_GCName"
+	case T_GCCause:
+		return "T_GCCause"
+	case T_G1YCType:
+		return "T_G1YCType"
+	case T_WallClockSamplingEpoch:
+		return "T_WallClockSamplingEpoch"
+	case T_GarbageCollection:
+		return "T_GarbageCollection"
+	case T_SystemGC:
+		return "T_SystemGC"
+	case T_ParallelOldGarbageCollection:
+		return "T_ParallelOldGarbageCollection"
+	case T_YoungGarbageCollection:
+		return "T_YoungGarbageCollection"
+	case T_OldGarbageCollection:
+		return "T_OldGarbageCollection"
+	case T_G1GarbageCollection:
+		return "T_G1GarbageCollection"
 	default:
 		return fmt.Sprintf("unknown type %d", id)
 	}
@@ -649,9 +704,14 @@ var Type_CounterName = def.Class{
 	},
 }
 
-var Type_datadogObjectSample = def.Class{
+//class{name: datadog.ObjectSample, id: 103, fields: [{Name:startTime Type:11 ConstantPool:false Array:false}
+//{Name:eventThread Type:22 ConstantPool:true Array:false} {Name:stackTrace Type:26 ConstantPool:true Array:false}
+//{Name:objectClass Type:21 ConstantPool:true Array:false} {Name:size Type:11 ConstantPool:false Array:false} {Name:weight Type:6 ConstantPool:false Array:false}
+//{Name:spanId Type:11 ConstantPool:false Array:false} {Name:localRootSpanId Type:11 ConstantPool:false Array:false} {Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
+
+var Type_DatadogObjectSample = def.Class{
 	Name: "datadog.ObjectSample",
-	ID:   def.TypeID(103),
+	ID:   T_ObjectSample,
 	Fields: []def.Field{
 		{Name: "startTime", Type: T_LONG, ConstantPool: false},
 		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
@@ -718,7 +778,7 @@ var Type_DatadogProfilerConfig = def.Class{
 //{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
 //{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
 
-var Type_datadog_HeapLiveObject = def.Class{
+var Type_Datadog_HeapLiveObject = def.Class{
 	Name: "datadog.HeapLiveObject",
 	ID:   def.TypeID(105),
 	Fields: []def.Field{
@@ -737,7 +797,7 @@ var Type_datadog_HeapLiveObject = def.Class{
 //{Name:size Type:11 ConstantPool:false Array:false}
 //{Name:isLive Type:4 ConstantPool:false Array:false}]}
 
-var Type_datadog_HeapUsage = def.Class{
+var Type_Datadog_HeapUsage = def.Class{
 	Name: "datadog.HeapUsage",
 	ID:   def.TypeID(121),
 	Fields: []def.Field{
@@ -758,9 +818,9 @@ var Type_datadog_HeapUsage = def.Class{
 //{Name:localRootSpanId Type:11 ConstantPool:false Array:false}
 //{Name:_dd.trace.operation Type:32 ConstantPool:true Array:false}]}
 
-var Type_datadog_MethodSample = def.Class{
+var Type_Datadog_MethodSample = def.Class{
 	Name: "datadog.MethodSample",
-	ID:   def.TypeID(102),
+	ID:   T_Datadog_MethodSample,
 	Fields: []def.Field{
 		{Name: "startTime", Type: T_LONG, ConstantPool: false},
 		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
@@ -806,7 +866,7 @@ var Type_QueueTime = def.Class{
 
 var Type_WallClockSamplingEpoch = def.Class{
 	Name: "datadog.WallClockSamplingEpoch",
-	ID:   def.TypeID(118),
+	ID:   T_WallClockSamplingEpoch,
 	Fields: []def.Field{
 		{Name: "startTime", Type: T_LONG, ConstantPool: false},
 		{Name: "duration", Type: T_LONG, ConstantPool: false},
@@ -839,5 +899,158 @@ var Type_datadogExecutionSample = def.Class{
 		{Name: "state", Type: T_THREAD_STATE, ConstantPool: true},
 		//{Name: "mode", Type: T_ExecutionMode, ConstantPool: true}, skip
 		{Name: "weight", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+//class{name: datadog.ExceptionSample, id: 5818, fields: [
+//{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:eventThread Type:162 ConstantPool:true Array:false}
+//{Name:stackTrace Type:186 ConstantPool:true Array:false}
+//{Name:type Type:212 ConstantPool:false Array:false}
+//{Name:message Type:212 ConstantPool:false Array:false}
+//{Name:sampled Type:210 ConstantPool:false Array:false}
+//{Name:firstOccurrence Type:210 ConstantPool:false Array:false}
+//{Name:localRootSpanId Type:204 ConstantPool:false Array:false}
+//{Name:spanId Type:204 ConstantPool:false Array:false}
+//]}
+
+var Type_DatadogException_sample = def.Class{
+	Name: "datadog.ExceptionSample",
+	ID:   T_Datadog_Excepion_Sample,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "type", Type: T_STRING, ConstantPool: false},
+		{Name: "message", Type: T_STRING, ConstantPool: false},
+		{Name: "sampled", Type: T_BOOLEAN, ConstantPool: false},
+		{Name: "firstOccurrence", Type: T_BOOLEAN, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.types.GCName, id: 169, fields: [{Name:name Type:212 ConstantPool:false Array:false}]}
+
+var Type_Types_GCName = def.Class{
+	Name: "jdk.types.GCName",
+	ID:   T_GCName,
+	Fields: []def.Field{
+		{Name: "name", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.types.GCCause, id: 170, fields: [{Name:cause Type:212 ConstantPool:false Array:false}]}
+
+var Type_Types_GCCause = def.Class{
+	Name: "jdk.types.GCCause",
+	ID:   T_GCCause,
+	Fields: []def.Field{
+		{Name: "name", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+// class{name: jdk.types.G1YCType, id: 173, fields: [{Name:type Type:212 ConstantPool:false Array:false}]}
+var Type_G1YCType = def.Class{
+	Name: "jdk.types.G1YCType",
+	ID:   T_G1YCType,
+	Fields: []def.Field{
+		{Name: "type", Type: T_STRING, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.GarbageCollection, id: 35, fields: [{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:gcId Type:205 ConstantPool:false Array:false}{Name:name Type:169 ConstantPool:true Array:false}
+//{Name:cause Type:170 ConstantPool:true Array:false}
+//{Name:sumOfPauses Type:204 ConstantPool:false Array:false}
+//{Name:longestPause Type:204 ConstantPool:false Array:false}]}
+
+var Type_GarbageCollection = def.Class{
+	Name: "jdk.GarbageCollection",
+	ID:   T_GarbageCollection,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "gcId", Type: T_INT, ConstantPool: false},
+		{Name: "name", Type: T_GCName, ConstantPool: true},
+		{Name: "cause", Type: T_GCCause, ConstantPool: true},
+		{Name: "sumOfPauses", Type: T_LONG, ConstantPool: false},
+		{Name: "longestPause", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.SystemGC, id: 36, fields: [{Name:startTime Type:204 ConstantPool:false Array:false} {Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:eventThread Type:162 ConstantPool:true Array:false}
+//{Name:stackTrace Type:186 ConstantPool:true Array:false} {Name:invokedConcurrent Type:210 ConstantPool:false Array:false}]}
+
+var Type_SystemGC = def.Class{
+	Name: "jdk.SystemGC",
+	ID:   T_SystemGC,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "eventThread", Type: T_THREAD, ConstantPool: true},
+		{Name: "stackTrace", Type: T_STACK_TRACE, ConstantPool: true},
+		{Name: "invokedConcurrent", Type: T_BOOLEAN, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.ParallelOldGarbageCollection, id: 37, fields: [{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:gcId Type:205 ConstantPool:false Array:false} {Name:densePrefix Type:204 ConstantPool:false Array:false}]}
+
+var Type_ParallelOldGarbageCollection = def.Class{
+	Name: "jdk.ParallelOldGarbageCollection",
+	ID:   T_ParallelOldGarbageCollection,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "gcId", Type: T_INT, ConstantPool: false},
+		{Name: "densePrefix", Type: T_LONG, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.YoungGarbageCollection, id: 38, fields: [{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:gcId Type:205 ConstantPool:false Array:false} {Name:tenuringThreshold Type:205 ConstantPool:false Array:false}]}
+
+var Type_YoungGarbageCollection = def.Class{
+	Name: "jdk.YoungGarbageCollection",
+	ID:   T_YoungGarbageCollection,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "gcId", Type: T_INT, ConstantPool: false},
+		{Name: "tenuringThreshold", Type: T_INT, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.OldGarbageCollection, id: 39, fields: [{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false} {Name:gcId Type:205 ConstantPool:false Array:false}]}
+
+var Type_OldGarbageCollection = def.Class{
+	Name: "jdk.OldGarbageCollection",
+	ID:   T_OldGarbageCollection,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "gcId", Type: T_INT, ConstantPool: false},
+	},
+}
+
+//class{name: jdk.G1GarbageCollection, id: 40, fields: [{Name:startTime Type:204 ConstantPool:false Array:false}
+//{Name:duration Type:204 ConstantPool:false Array:false}
+//{Name:gcId Type:205 ConstantPool:false Array:false}
+//{Name:type Type:173 ConstantPool:true Array:false}]}
+
+var Type_G1GarbageCollection = def.Class{
+	Name: "jdk.G1GarbageCollection",
+	ID:   T_G1GarbageCollection,
+	Fields: []def.Field{
+		{Name: "startTime", Type: T_LONG, ConstantPool: false},
+		{Name: "duration", Type: T_LONG, ConstantPool: false},
+		{Name: "gcId", Type: T_INT, ConstantPool: false},
+		{Name: "type", Type: T_G1YCType, ConstantPool: true},
 	},
 }
