@@ -337,17 +337,19 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			p.pos = pp + int(size)
 			return ttyp, nil
 
-		case p.TypeMap.T_Datadog_ExceptionSample:
-			if p.bindDataDogExceptionSample == nil {
-				p.pos = pp + int(size) // skip
-				continue
-			}
-			_, err := p.DatadogExceptionSample.Parse(p.buf[p.pos:], p.bindDataDogExceptionSample, &p.TypeMap)
-			if err != nil {
-				return 0, err
-			}
-			p.pos = pp + int(size)
-			return ttyp, nil
+			/*
+				case p.TypeMap.T_Datadog_ExceptionSample:
+				if p.bindDataDogExceptionSample == nil {
+					p.pos = pp + int(size) // skip
+					continue
+				}
+				_, err := p.DatadogExceptionSample.Parse(p.buf[p.pos:], p.bindDataDogExceptionSample, &p.TypeMap)
+				if err != nil {
+					return 0, err
+				}
+				p.pos = pp + int(size)
+				return ttyp, nil
+			*/
 		case p.TypeMap.T_JDK_GarbageCollection:
 			if p.bindJDKGarbageCollection == nil {
 				p.pos = pp + int(size) // skip
@@ -415,7 +417,7 @@ func (p *Parser) ParseEvent() (def.TypeID, error) {
 			p.pos = pp + int(size)
 			return ttyp, nil
 		default:
-			fmt.Printf("skipping %s %v\n", ttyp, ttyp)
+			//fmt.Printf("skipping %s %v\n", ttyp, ttyp)
 			p.pos = pp + int(size)
 		}
 	}
