@@ -3,13 +3,14 @@ package units
 type Kind int
 
 const (
-	UnknownKind Kind = 0
-	Duration    Kind = 1
-	Memory      Kind = 2
-	Numeric     Kind = 3
-	TimeStamp   Kind = 4
-	Frequency   Kind = 5
-	Percentage  Kind = 6
+	UnknownKind Kind = iota
+	Duration
+	Memory
+	Numeric
+	TimeStamp
+	Frequency
+	Percentage
+	Address
 )
 
 var kindDesc = [...]string{
@@ -145,8 +146,12 @@ var (
 	UnixMilli  = UnixMicro.Derived("epoch_ms", I64(1000))
 	UnixSecond = UnixMilli.Derived("epoch_s", I64(1000))
 
-	Multiple = newUnit("", Percentage, I64(1))    // eg: 0.15
-	Percent  = newUnit("%", Percentage, I64(100)) // eg: 15%
+	PercentUnity = newUnit("", Percentage, I64(1))    // eg: 0.15
+	Percent      = newUnit("%", Percentage, I64(100)) // eg: 15%
 
 	Hertz = newUnit("hz", Frequency, I64(1))
+
+	AddressUnity = newUnit("", Address, I64(1))
+
+	NumberUnity = newUnit("", Numeric, I64(1))
 )

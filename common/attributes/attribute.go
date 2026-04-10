@@ -75,11 +75,16 @@ func (a *Attribute[T]) GetValue(event *parser.GenericEvent) (T, error) {
 		return t, fmt.Errorf("attribute name [%s] is not found in the event", a.Name)
 	}
 
-	if x, ok := attr.(T); ok {
+	rawAttr := parser.UnwrapValue(attr)
+
+	if x, ok := rawAttr.(T); ok {
 		return x, nil
 	}
 
-	attrValue := reflect.ValueOf(attr)
+	attrValue := reflect.ValueOf(rawAttr)
+	if !attrValue.IsValid() {
+		return t, fmt.Errorf("attribute [%s] is nil", a.Name)
+	}
 	attrType := attrValue.Type()
 	tValue := reflect.ValueOf(&t).Elem()
 	tType := tValue.Type()
@@ -103,60 +108,80 @@ func (a *Attribute[T]) GetValue(event *parser.GenericEvent) (T, error) {
 	}
 
 	fieldMeta := event.ClassMetadata.GetField(a.Name)
-	fieldUnit := fieldMeta.Unit(event.ClassMetadata.ClassMap)
-
-	if fieldUnit != nil || fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
+	if fieldMeta != nil {
+		fieldUnit := fieldMeta.Unit(event.ClassMetadata.ClassMap)
 		var (
 			num      units.Number
 			quantity units.IQuantity
 		)
 
-		switch attr.(type) {
-		case *parser.Byte, *parser.Short, *parser.Int, *parser.Long:
-			if fieldMeta.Unsigned(event.ClassMetadata.ClassMap) {
-				var x any
-				switch ax := attr.(type) {
-				case *parser.Byte:
-					x = uint8(*ax)
-				case *parser.Short:
-					x = uint16(*ax)
-				case *parser.Int:
-					x = uint32(*ax)
-				case *parser.Long:
-					x = uint64(*ax)
+		if fieldUnit != nil || fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
+			switch rawAttr.(type) {
+			case *parser.Byte, *parser.Short, *parser.Int, *parser.Long:
+				if fieldMeta.Unsigned(event.ClassMetadata.ClassMap) {
+					var x any
+					switch ax := rawAttr.(type) {
+					case *parser.Byte:
+						x = uint8(*ax)
+					case *parser.Short:
+						x = uint16(*ax)
+					case *parser.Int:
+						x = uint32(*ax)
+					case *parser.Long:
+						x = uint64(*ax)
+					}
+					num = units.I64(reflect.ValueOf(x).Uint())
+				} else {
+					num = units.I64(reflect.ValueOf(rawAttr).Elem().Int())
 				}
-				num = units.I64(reflect.ValueOf(x).Uint())
-			} else {
-				num = units.I64(reflect.ValueOf(attr).Elem().Int())
+			case *parser.Float, *parser.Double:
+				num = units.F64(reflect.ValueOf(rawAttr).Elem().Float())
+			case int8, int16, int32, int64, int:
+				num = units.I64(reflect.ValueOf(rawAttr).Int())
+			case uint8, uint16, uint32, uint64, uint:
+				num = units.I64(int64(reflect.ValueOf(rawAttr).Uint()))
+			case float32, float64:
+				num = units.F64(reflect.ValueOf(rawAttr).Convert(reflect.TypeOf(float64(0))).Float())
 			}
-		case *parser.Float, *parser.Double:
-			num = units.F64(reflect.ValueOf(attr).Elem().Float())
-		}
 
-		if fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
-			ts := fieldMeta.ChunkHeader.StartTimeNanos + ((num.Int64() - fieldMeta.ChunkHeader.StartTicks) * 1e9 / fieldMeta.ChunkHeader.TicksPerSecond)
-			quantity = units.NewIntQuantity(ts, units.UnixNano)
-		} else {
-			if num.Float() {
-				quantity = units.NewFloatQuantity(num.Float64(), fieldUnit)
-			} else {
-				quantity = units.NewIntQuantity(num.Int64(), fieldUnit)
+			if num != nil {
+				if fieldMeta.TickTimestamp(event.ClassMetadata.ClassMap) {
+					ts := fieldMeta.ChunkHeader.StartTimeNanos + ((num.Int64() - fieldMeta.ChunkHeader.StartTicks) * 1e9 / fieldMeta.ChunkHeader.TicksPerSecond)
+					quantity = units.NewIntQuantity(ts, units.UnixNano)
+				} else {
+					if num.Float() {
+						quantity = units.NewFloatQuantity(num.Float64(), fieldUnit)
+					} else {
+						quantity = units.NewIntQuantity(num.Int64(), fieldUnit)
+					}
+				}
 			}
-		}
 
-		if q, ok := quantity.(T); ok {
-			return q, nil
+			if quantity != nil {
+				if q, ok := quantity.(T); ok {
+					return q, nil
+				}
+			}
 		}
 	}
 
 	switch any(t).(type) {
 	case string:
+		if s, ok := rawAttr.(string); ok {
+			reflect.ValueOf(&t).Elem().SetString(s)
+			return t, nil
+		}
 		s, err := parser.ToString(attr)
 		if err != nil {
 			return t, fmt.Errorf("unable to resolve string: %w", err)
 		}
 		reflect.ValueOf(&t).Elem().SetString(s)
 		return t, nil
+	case bool:
+		if b, ok := rawAttr.(bool); ok {
+			reflect.ValueOf(&t).Elem().SetBool(b)
+			return t, nil
+		}
 	}
 
 	return t, fmt.Errorf("attribute is not type of %T", t)

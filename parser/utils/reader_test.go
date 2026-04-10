@@ -1,4 +1,4 @@
-package parser
+package utils
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ func TestNewChunkReader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := NewChunkReader(bytes.NewBuffer(buf))
+	cr := NewDataReader(bytes.NewBuffer(buf))
 
 	all, err := io.ReadAll(cr)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestChunkReader_Skip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := NewChunkReader(bytes.NewBuffer(buf))
+	cr := NewDataReader(bytes.NewBuffer(buf))
 
 	_, err := cr.Skip(11111)
 	if err != nil {
@@ -93,7 +93,7 @@ func TestChunkReader_FillTo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := NewChunkReader(bytes.NewBuffer(buf))
+	cr := NewDataReader(bytes.NewBuffer(buf))
 
 	n, err := cr.FillTo(8)
 	if err != nil {
@@ -133,7 +133,7 @@ func TestChunkReader_ReadAt(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := NewChunkReader(bytes.NewBuffer(buf))
+	cr := NewDataReader(bytes.NewBuffer(buf))
 
 	out := make([]byte, 996)
 

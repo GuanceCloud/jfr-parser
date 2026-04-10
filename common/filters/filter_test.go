@@ -213,7 +213,7 @@ func TestTypes(t *testing.T) {
 }
 
 func TestParseFile(t *testing.T) {
-	cks, err := parser.ParseFile("testdata/corrupt.jfr")
+	cks, err := parser.ParseFile("testdata/v0.9.jfr")
 	if err != nil {
 		t.Fatal(err)
 	}

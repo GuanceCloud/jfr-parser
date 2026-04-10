@@ -383,6 +383,13 @@ func (b *Boolean) Parse(r Reader, _ ClassMap, _ PoolMap, _ *ClassMetadata) error
 func (*Boolean) Resolve(ClassMap, PoolMap) error { return nil }
 
 func toBoolean(p Parseable) (bool, error) {
+	if raw, ok := p.(*RawValue); ok {
+		x, ok := raw.Value.(bool)
+		if !ok {
+			return false, errors.New("not a Boolean")
+		}
+		return x, nil
+	}
 	x, ok := p.(*Boolean)
 	if !ok {
 		return false, errors.New("not a Boolean")
@@ -592,6 +599,13 @@ func (s *String) Resolve(_ ClassMap, poolMap PoolMap) error {
 }
 
 func ToString(p Parseable) (string, error) {
+	if raw, ok := p.(*RawValue); ok {
+		s, ok := raw.Value.(string)
+		if !ok {
+			return "", errors.New("not a String")
+		}
+		return s, nil
+	}
 	s, ok := p.(*String)
 	if !ok {
 		return "", errors.New("not a String")

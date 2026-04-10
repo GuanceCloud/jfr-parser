@@ -116,7 +116,7 @@ func (f *FieldMetadata) resolve(classMap ClassMap) {
 		case annotationMemoryAmount, annotationDataAmount:
 			f.unit = units.Byte
 		case annotationPercentage:
-			f.unit = units.Multiple
+			f.unit = units.PercentUnity
 		case annotationTimespan:
 			switch annotation.Values[valueProperty] {
 			case unitTicks:

@@ -2,14 +2,37 @@ package parser
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"os"
 	"unsafe"
 
 	types2 "github.com/grafana/jfr-parser/parser/types"
 	"github.com/grafana/jfr-parser/parser/types/def"
+	"go.uber.org/zap/zapcore"
 )
+
+var l = initLogger("parser", zap.DebugLevel)
+
+func initLogger(name string, level zapcore.Level) *zap.SugaredLogger {
+	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+		MessageKey: "msg",
+		LevelKey:   "level",
+		TimeKey:    "time",
+		NameKey:    name,
+		CallerKey:  "caller",
+
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	})
+
+	core := zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), level)
+	return zap.New(core).Named(name).Sugar()
+}
 
 func ParseFile(p string) ([]*Chunk, error) {
 	f, err := os.Open(p)
@@ -34,12 +57,13 @@ func ParseWithOptions(r io.Reader, options *ChunkParseOptions) ([]*Chunk, error)
 	for {
 		chunk := new(Chunk)
 		err := chunk.Parse(r, options)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return chunks, nil
 		}
 		if err != nil {
 			return chunks, fmt.Errorf("unable to parse chunk: %w", err)
 		}
+		l.Debug("parse chunk successfully")
 		chunks = append(chunks, chunk)
 	}
 }

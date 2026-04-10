@@ -26,6 +26,14 @@ func TestParseZip(t *testing.T) {
 	fmt.Println("chunks length: ", len(chunks))
 }
 
+func TestParseFile(t *testing.T) {
+	chunks, err := ParseFile("./testdata/goland-multichunk.jfr.gz")
+	if err != nil {
+		t.Fatalf("Unable to parse jfr file: %s", err)
+	}
+	t.Log("chunks length: ", len(chunks))
+}
+
 func TestParse(t *testing.T) {
 	jfr, err := os.Open("./testdata/example.jfr.gz")
 	if err != nil {
@@ -33,6 +41,9 @@ func TestParse(t *testing.T) {
 	}
 	expectedJson, err := readGzipFile("./testdata/example_parsed.json.gz")
 	if err != nil {
+		if os.IsNotExist(err) {
+			t.Skip("example_parsed.json.gz is not present in this checkout")
+		}
 		t.Fatalf("Unable to read example_parsd.json")
 	}
 	chunks, err := Parse(jfr)
