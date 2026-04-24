@@ -656,6 +656,8 @@ type ExecutionSample struct {
 	SampledThread *Thread
 	StackTrace    *StackTrace
 	State         *ThreadState
+	SpanId        int64
+	SpanName      int64
 	ContextId     int64
 }
 
@@ -669,6 +671,10 @@ func (es *ExecutionSample) parseField(name string, p ParseResolvable) (err error
 		es.StackTrace, err = toStackTrace(p)
 	case "state":
 		es.State, err = toThreadState(p)
+	case "spanId":
+		es.SpanId, err = toLong(p)
+	case "spanName":
+		es.SpanName, err = toLong(p)
 	case "contextId":
 		es.ContextId, err = toLong(p)
 	}
@@ -891,6 +897,8 @@ type JavaMonitorEnter struct {
 	MonitorClass  *Class
 	PreviousOwner *Thread
 	Address       int64
+	SpanId        int64
+	SpanName      int64
 	ContextId     int64
 }
 
@@ -910,6 +918,10 @@ func (jme *JavaMonitorEnter) parseField(name string, p ParseResolvable) (err err
 		jme.PreviousOwner, err = toThread(p)
 	case "address":
 		jme.Address, err = toLong(p)
+	case "spanId":
+		jme.SpanId, err = toLong(p)
+	case "spanName":
+		jme.SpanName, err = toLong(p)
 	case "contextId":
 		jme.ContextId, err = toLong(p)
 	}
@@ -1204,6 +1216,8 @@ type ObjectAllocationInNewTLAB struct {
 	ObjectClass    *Class
 	AllocationSize int64
 	TLABSize       int64
+	SpanId         int64
+	SpanName       int64
 	ContextId      int64
 }
 
@@ -1211,7 +1225,7 @@ func (oa *ObjectAllocationInNewTLAB) parseField(name string, p ParseResolvable) 
 	switch name {
 	case "startTime":
 		oa.StartTime, err = toLong(p)
-	case "sampledThread":
+	case "eventThread", "sampledThread":
 		oa.EventThread, err = toThread(p)
 	case "stackTrace":
 		oa.StackTrace, err = toStackTrace(p)
@@ -1221,6 +1235,10 @@ func (oa *ObjectAllocationInNewTLAB) parseField(name string, p ParseResolvable) 
 		oa.AllocationSize, err = toLong(p)
 	case "tlabSize":
 		oa.TLABSize, err = toLong(p)
+	case "spanId":
+		oa.SpanId, err = toLong(p)
+	case "spanName":
+		oa.SpanName, err = toLong(p)
 	case "contextId":
 		oa.ContextId, err = toLong(p)
 	}
@@ -1239,6 +1257,8 @@ type ObjectAllocationOutsideTLAB struct {
 	StackTrace     *StackTrace
 	ObjectClass    *Class
 	AllocationSize int64
+	SpanId         int64
+	SpanName       int64
 	ContextId      int64
 }
 
@@ -1246,7 +1266,7 @@ func (oa *ObjectAllocationOutsideTLAB) parseField(name string, p ParseResolvable
 	switch name {
 	case "startTime":
 		oa.StartTime, err = toLong(p)
-	case "sampledThread":
+	case "eventThread", "sampledThread":
 		oa.EventThread, err = toThread(p)
 	case "stackTrace":
 		oa.StackTrace, err = toStackTrace(p)
@@ -1254,6 +1274,10 @@ func (oa *ObjectAllocationOutsideTLAB) parseField(name string, p ParseResolvable
 		oa.ObjectClass, err = toClass(p)
 	case "allocationSize":
 		oa.AllocationSize, err = toLong(p)
+	case "spanId":
+		oa.SpanId, err = toLong(p)
+	case "spanName":
+		oa.SpanName, err = toLong(p)
 	case "contextId":
 		oa.ContextId, err = toLong(p)
 	}
@@ -1631,6 +1655,8 @@ type ThreadPark struct {
 	Timeout     int64
 	Until       int64
 	Address     int64
+	SpanId      int64
+	SpanName    int64
 	ContextId   int64
 }
 
@@ -1652,6 +1678,10 @@ func (tp *ThreadPark) parseField(name string, p ParseResolvable) (err error) {
 		tp.Until, err = toLong(p)
 	case "address":
 		tp.Address, err = toLong(p)
+	case "spanId":
+		tp.SpanId, err = toLong(p)
+	case "spanName":
+		tp.SpanName, err = toLong(p)
 	case "contextId": // todo this one seems to be unimplemented in the profiler yet
 		tp.ContextId, err = toLong(p)
 	}
