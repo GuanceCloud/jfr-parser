@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"unicode/utf16"
 
 	reader2 "github.com/GuanceCloud/jfr-parser/compatparser/reader"
 )
@@ -122,8 +123,12 @@ func (r reader) String(pool *CPool) (string, error) {
 			return "", fmt.Errorf("not type of parser.String")
 		}
 		return string(*str), nil
-	case 3, 4, 5:
+	case 3:
 		return r.utf8()
+	case 4:
+		return r.charArray()
+	case 5:
+		return r.latin1()
 	default:
 		// TODO
 		return "", fmt.Errorf("Unsupported string type :%d", enc)
@@ -145,10 +150,44 @@ func (r reader) VarLong() (int64, error) {
 func (r reader) utf8() (string, error) {
 	n, err := r.varR.VarInt()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	// TODO: make sure n is reasonable
 	b := make([]byte, n)
 	_, err = io.ReadFull(r, b)
 	return string(b), err
+}
+
+func (r reader) charArray() (string, error) {
+	n, err := r.varR.VarInt()
+	if err != nil {
+		return "", err
+	}
+
+	chars := make([]uint16, n)
+	for i := 0; i < int(n); i++ {
+		ch, err := r.varR.VarShort()
+		if err != nil {
+			return "", err
+		}
+		chars[i] = uint16(ch)
+	}
+	return string(utf16.Decode(chars)), nil
+}
+
+func (r reader) latin1() (string, error) {
+	n, err := r.varR.VarInt()
+	if err != nil {
+		return "", err
+	}
+
+	b := make([]byte, n)
+	if _, err = io.ReadFull(r, b); err != nil {
+		return "", err
+	}
+	runes := make([]rune, len(b))
+	for i, c := range b {
+		runes[i] = rune(c)
+	}
+	return string(runes), nil
 }
