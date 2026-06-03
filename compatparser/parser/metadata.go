@@ -226,20 +226,6 @@ func (m *MetadataEvent) Parse(r Reader) (err error) {
 		classes[clazz.ID] = clazz
 	}
 
-	for _, clazz := range m.Root.Metadata.Classes {
-		fmt.Println("metadata class name:", clazz.Name)
-
-		for _, anno := range clazz.Annotations {
-			fmt.Println("class annotation class: ", classes[anno.Class].Name, "class annotation value: ", anno.Values)
-		}
-
-		for _, field := range clazz.Fields {
-			fmt.Println("field name:", field.Name, "field ID:", classes[field.Class].Name, "ConstantPool: ", field.ConstantPool, "Dimension:", field.Dimension)
-		}
-		fmt.Println("--------------------------------------")
-
-	}
-
 	return nil
 }
 
