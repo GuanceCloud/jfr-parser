@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/pierrec/lz4/v4"
-	"github.com/zhyee/zipiterator"
+	"github.com/zhyee/zipstream"
 )
 
 type CompressionType uint8
@@ -19,6 +20,7 @@ const (
 	GZip
 	ZIP
 	LZ4
+	ZSTD
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 	ZIPMagic  = []byte{0x50, 0x4b, 3, 4}
 	LZ4Magic  = []byte{4, 34, 77, 24}
 	GZipMagic = []byte{31, 139}
+	ZSTDMagic = []byte{0x28, 0xb5, 0x2f, 0xfd}
 )
 
 func hasMagic(buf []byte, magic []byte) bool {
@@ -41,6 +44,8 @@ func GuessCompressionType(magic []byte) CompressionType {
 			return ZIP
 		} else if hasMagic(magic, LZ4Magic) {
 			return LZ4
+		} else if hasMagic(magic, ZSTDMagic) {
+			return ZSTD
 		} else if hasMagic(magic, JFRMagic) {
 			return PlainJFR
 		}
@@ -66,7 +71,7 @@ func Uncompress(r io.Reader) (io.ReadCloser, error) {
 	case GZip:
 		return gzip.NewReader(r)
 	case ZIP:
-		zr := zipiterator.NewReader(r)
+		zr := zipstream.NewReader(r)
 		for {
 			entry, err := zr.GetNextEntry()
 			if err != nil {
@@ -81,6 +86,12 @@ func Uncompress(r io.Reader) (io.ReadCloser, error) {
 		}
 	case LZ4:
 		return io.NopCloser(lz4.NewReader(r)), nil
+	case ZSTD:
+		zr, err := zstd.NewReader(r)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create zstd reader: %w", err)
+		}
+		return zr.IOReadCloser(), nil
 	case PlainJFR:
 		return io.NopCloser(r), nil
 	default:

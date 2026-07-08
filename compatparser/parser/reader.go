@@ -7,7 +7,7 @@ import (
 	"io"
 	"unicode/utf16"
 
-	reader2 "github.com/GuanceCloud/jfr-parser/compatparser/reader"
+	reader2 "github.com/grafana/jfr-parser/compatparser/reader"
 )
 
 type Reader interface {
